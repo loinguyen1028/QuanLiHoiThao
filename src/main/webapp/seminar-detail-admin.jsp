@@ -38,7 +38,7 @@
                     <%
                         if (seminar != null && seminar.getImage() != null && !seminar.getImage().isEmpty()) {
                     %>
-                    <img id="immage" class="image" src="<%= "/" + seminar.getImage()%>"
+                    <img id="immage" class="image" src="<%= seminar.getImage()%>"
                          style="width: 100%; height: auto; border-radius: 0.25rem; border: 1px solid #ddd; margin-top: 10px;"
                     >
                     <%
