@@ -21,7 +21,7 @@ public class FileUploadUtil {
     private static final Logger log = Logger.getLogger(FileUploadUtil.class.getName());
 
     // Tên thư mục gốc để lưu file
-    private static final String BASE_UPLOAD_DIR = "uploads";
+    private static final String BASE_UPLOAD_DIR = "/Img";
 
     // Giới hạn file
     private static final long MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB (cho phép upload ảnh to, sau đó sẽ resize)

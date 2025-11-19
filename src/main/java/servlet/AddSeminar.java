@@ -69,10 +69,10 @@ public class AddSeminar extends HttpServlet {
 
         if (imagePart != null && imagePart.getSize() > 0 && imagePart.getSubmittedFileName() != null && !imagePart.getSubmittedFileName().isEmpty()) {
             //String appPath = FileUploadUtil.safeAppRealPath(getServletContext());
-            String appPath = "D:/uploads_wed/";
-            imagePath = FileUploadUtil.uploadImageReturnPath(imagePart, "images", appPath);
+            String appPath = "D:/";
+            imagePath = FileUploadUtil.uploadImageReturnPath(imagePart, "banner", appPath);
         }
-        System.out.println(imagePath);
+//        System.out.println(imagePath);
         Seminar seminar = new Seminar(name, description, startDate, endDate,
                 location, speaker, category, maxAttendance, imagePath);
 
