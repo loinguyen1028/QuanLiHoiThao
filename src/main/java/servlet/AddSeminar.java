@@ -68,7 +68,8 @@ public class AddSeminar extends HttpServlet {
         String imagePath = "";
 
         if (imagePart != null && imagePart.getSize() > 0 && imagePart.getSubmittedFileName() != null && !imagePart.getSubmittedFileName().isEmpty()) {
-            String appPath = FileUploadUtil.safeAppRealPath(getServletContext());
+            //String appPath = FileUploadUtil.safeAppRealPath(getServletContext());
+            String appPath = "D:/uploads_wed/";
             imagePath = FileUploadUtil.uploadImageReturnPath(imagePart, "images", appPath);
         }
         System.out.println(imagePath);

@@ -166,17 +166,15 @@
             const file = e.target.files && e.target.files[0];
             if (!file) return;
 
-            // Tạo URL tạm thời cho ảnh để xem trước
             const url = URL.createObjectURL(file);
             preview.src = url;
 
-            // Đảm bảo style không bị vỡ khi load ảnh mới
             preview.style.width = "100%";
-            preview.style.height = "auto";
-            preview.style.maxHeight = "300px"; // Giới hạn chiều cao
-            preview.style.objectFit = "contain";
+            preview.style.height = "400px"; // 1. Đặt chiều cao cố định
+            preview.style.objectFit = "cover"; // 2. Cắt ảnh để lấp đầy khung (hoặc dùng "contain" để thấy toàn bộ ảnh)
             preview.style.border = "1px solid #ddd";
             preview.style.marginTop = "10px";
+            preview.style.borderRadius = "0.25rem";
         });
     }
 </script>

@@ -30,9 +30,9 @@
                 <div class="card-body">
                     <form action="edit_seminar" method="POST" enctype="multipart/form-data">
 
-<%--                        <% if (isEditMode) { %>--%>
+                        <%--                        <% if (isEditMode) { %>--%>
                         <input type="hidden" name="seminarId" value="<%= seminar.getId()%>">
-<%--                        <% } %>--%>
+                        <%--                        <% } %>--%>
 
 
                         <div class="row">
@@ -50,7 +50,7 @@
                                             if (seminar != null && seminar.getImage() != null && !seminar.getImage().isEmpty()) {
                                                 System.out.println(request.getContextPath() + "/" + seminar.getImage());
                                         %>
-                                        <img id="imagePreview" class="image" src="<%= request.getContextPath() + "/" + seminar.getImage()%>"
+                                        <img id="imagePreview" class="image" src="<%= "/" + seminar.getImage()%>"
                                              style="width: 100%; height: auto; border-radius: 0.25rem; border: 1px solid #ddd; margin-top: 10px;"
                                         >
                                         <%
@@ -66,9 +66,9 @@
                                         %>
                                     </div>
 
-<%--                                    <% if (isEditMode && bannerUrl != null && !bannerUrl.isEmpty()) { %>--%>
+                                    <%--                                    <% if (isEditMode && bannerUrl != null && !bannerUrl.isEmpty()) { %>--%>
                                     <input type="hidden" name="existingBannerUrl" value="">
-<%--                                    <% } %>--%>
+                                    <%--                                    <% } %>--%>
                                 </div>
                             </div>
 
@@ -186,17 +186,15 @@
             const file = e.target.files && e.target.files[0];
             if (!file) return;
 
-            // Tạo URL tạm thời cho ảnh để xem trước
             const url = URL.createObjectURL(file);
             preview.src = url;
 
-            // Đảm bảo style không bị vỡ khi load ảnh mới
             preview.style.width = "100%";
-            preview.style.height = "auto";
-            preview.style.maxHeight = "300px"; // Giới hạn chiều cao
-            preview.style.objectFit = "contain";
+            preview.style.height = "400px"; // Đặt chiều cao cố định (ví dụ 200px)
+            preview.style.objectFit = "cover";
             preview.style.border = "1px solid #ddd";
             preview.style.marginTop = "10px";
+            preview.style.borderRadius = "0.25rem";
         });
     }
 </script>
