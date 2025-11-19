@@ -5,115 +5,61 @@ import java.sql.Timestamp;
 
 public class Register {
     private int id;
-    private int seminarId;           // seminar_id (FK → seminar.id)
-    private Date registerDate;       // register_date
-    private String registrationCode; // registration_code
-    private boolean vip;             // is_vip
-    private Timestamp checkinTime;   // checkin_time
+    private int seminarId;
+    private Date registerDate;
+    private String registrationCode; // Mã bí mật (để sửa)
+    private String checkInId;        // Mã công khai (để check-in/QR) --> CỘT MỚI
+    private boolean vip;
+    private Timestamp checkinTime;
 
-    private String name;             // name
-    private String email;            // email
-    private String password;         // password
-    private String phone;            // phone
-    private String userType;         // user_type
+    private String name;
+    private String email;
+    private String password;
+    private String phone;
+    private String userType;
+
+    // Biến phụ để hiển thị tên hội thảo
+    private String eventName;
 
     public Register() {}
 
-    // Constructor tiện để insert nhanh
-    public Register(int seminarId, String name, String email, String phone, String userType) {
-        this.seminarId = seminarId;
-        this.name = name;
-        this.email = email;
-        this.phone = phone;
-        this.userType = userType;
-    }
+    // --- Getters & Setters ---
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    // Getter - Setter
-    public int getId() {
-        return id;
-    }
+    public int getSeminarId() { return seminarId; }
+    public void setSeminarId(int seminarId) { this.seminarId = seminarId; }
 
-    public void setId(int id) {
-        this.id = id;
-    }
+    public Date getRegisterDate() { return registerDate; }
+    public void setRegisterDate(Date registerDate) { this.registerDate = registerDate; }
 
-    public int getSeminarId() {
-        return seminarId;
-    }
+    public String getRegistrationCode() { return registrationCode; }
+    public void setRegistrationCode(String registrationCode) { this.registrationCode = registrationCode; }
 
-    public void setSeminarId(int seminarId) {
-        this.seminarId = seminarId;
-    }
+    public String getCheckInId() { return checkInId; }
+    public void setCheckInId(String checkInId) { this.checkInId = checkInId; }
 
-    public Date getRegisterDate() {
-        return registerDate;
-    }
+    public boolean isVip() { return vip; }
+    public void setVip(boolean vip) { this.vip = vip; }
 
-    public void setRegisterDate(Date registerDate) {
-        this.registerDate = registerDate;
-    }
+    public Timestamp getCheckinTime() { return checkinTime; }
+    public void setCheckinTime(Timestamp checkinTime) { this.checkinTime = checkinTime; }
 
-    public String getRegistrationCode() {
-        return registrationCode;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public void setRegistrationCode(String registrationCode) {
-        this.registrationCode = registrationCode;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public boolean isVip() {
-        return vip;
-    }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
-    public void setVip(boolean vip) {
-        this.vip = vip;
-    }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
 
-    public Timestamp getCheckinTime() {
-        return checkinTime;
-    }
+    public String getUserType() { return userType; }
+    public void setUserType(String userType) { this.userType = userType; }
 
-    public void setCheckinTime(Timestamp checkinTime) {
-        this.checkinTime = checkinTime;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public String getUserType() {
-        return userType;
-    }
-
-    public void setUserType(String userType) {
-        this.userType = userType;
-    }
+    public String getEventName() { return eventName; }
+    public void setEventName(String eventName) { this.eventName = eventName; }
 }
