@@ -25,44 +25,51 @@ public class ListSeminarServlet extends HttpServlet {
             throws ServletException, IOException {
 
         try {
-            String type = req.getParameter("type");  // environment / technology / science
+            String msg = req.getParameter("msg");
+            if (msg != null) req.setAttribute("msg", msg);
 
-            if (type == null) {
-                // Không truyền type → có thể cho về 404 hoặc mặc định Môi trường
-                type = "environment";
+            String type = req.getParameter("type");
+            if (type == null) type = "environment";
+
+            // Lấy trạng thái VIP (mặc định -1)
+            int vipStatus = -1;
+            if (req.getParameter("vipStatus") != null) {
+                try { vipStatus = Integer.parseInt(req.getParameter("vipStatus")); } catch (Exception e) {}
             }
 
             int categoryId;
             String categoryName;
 
             switch (type) {
-                case "technology":
-                    categoryId = 2;
-                    categoryName = "Hội thảo công nghệ";
-                    break;
-                case "science":
-                    categoryId = 3;
-                    categoryName = "Hội thảo khoa học";
-                    break;
-                case "environment":
+                case "technology": categoryId = 2; categoryName = "Hội thảo công nghệ"; break;
+                case "science": categoryId = 3; categoryName = "Hội thảo khoa học"; break;
                 default:
-                    categoryId = 1;
-                    categoryName = "Hội thảo môi trường";
-                    break;
+                case "environment": categoryId = 1; categoryName = "Hội thảo môi trường"; break;
             }
 
-            // Lấy list đăng ký theo category
-            List<Register> list = dao.getByCategoryId(categoryId);
+            int page = 1;
+            int pageSize = 10;
+            if (req.getParameter("page") != null) {
+                try { page = Integer.parseInt(req.getParameter("page")); } catch (Exception e) {}
+            }
+
+            // Gọi DAO mới có tham số vipStatus
+            List<Register> list = dao.getByCategoryIdWithPaging(categoryId, page, pageSize, vipStatus);
+            int totalRecords = dao.countByCategoryId(categoryId, vipStatus);
+            int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
 
             req.setAttribute("list", list);
             req.setAttribute("categoryName", categoryName);
             req.setAttribute("type", type);
+            req.setAttribute("vipStatus", vipStatus); // Gửi lại JSP
+            req.setAttribute("currentPage", page);
+            req.setAttribute("totalPages", totalPages);
 
             req.getRequestDispatcher("list-user.jsp").forward(req, resp);
 
         } catch (Exception e) {
             e.printStackTrace();
-            resp.sendRedirect("404.jsp");
+            resp.sendRedirect("home.jsp");
         }
     }
 }
