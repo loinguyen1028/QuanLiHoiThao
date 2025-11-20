@@ -25,11 +25,11 @@
 
 <div id="wrapper">
     <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
-        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="admin.jsp">
             <div class="sidebar-brand-icon rotate-n-15">
                 <i class="fas fa-laugh-wink"></i>
             </div>
-            <div class="sidebar-brand-text mx-3">HCMUTE</div>
+            <div class="sidebar-brand-text mx-3">LHQ SEMINAR</div>
         </a>
 
         <hr class="sidebar-divider my-0">
@@ -69,7 +69,11 @@
                 </div>
             </div>
         </li>
-
+        <li class="nav-item active">
+            <a class="nav-link" href="check-in.jsp">
+                <i class="fas fa-fw fa-folder"></i>
+                <span>Quản lí hội thảo</span></a>
+        </li>
     </ul>
 
     <div id="content-wrapper" class="d-flex flex-column">

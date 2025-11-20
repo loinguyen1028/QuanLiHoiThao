@@ -74,7 +74,6 @@ public class RegisterServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
         request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
 
@@ -176,7 +175,6 @@ public class RegisterServlet extends HttpServlet {
         r.setCheckInId(checkInId);
 
         Register created = registerRepository.create(r);
-
         if (created != null) {
             try {
                 String eventName = (seminar != null) ? seminar.getName() : "Hội thảo";

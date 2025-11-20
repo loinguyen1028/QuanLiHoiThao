@@ -82,7 +82,9 @@ public class AdminUserServlet extends HttpServlet {
             resp.sendRedirect("list-user?type=" + typeRedirect + "&msg=" + msg);
         } catch (Exception e) {
             e.printStackTrace();
-            resp.sendRedirect("list-user");
+            // Nếu có lỗi xóa thì báo lỗi (về JSP hiển thị alert-danger)
+            String msg = URLEncoder.encode("Xóa thất bại! Đã xảy ra lỗi.", StandardCharsets.UTF_8);
+            resp.sendRedirect("list-user?msg=" + msg + "&error=1");
         }
     }
 
@@ -161,32 +163,40 @@ public class AdminUserServlet extends HttpServlet {
                 String msg = URLEncoder.encode("Thêm thành công và đã gửi vé!", StandardCharsets.UTF_8);
                 resp.sendRedirect("list-user?type=" + typeRedirect + "&msg=" + msg);
             } else {
+                // Thêm thất bại (ví dụ email trùng) -> redirect có flag error
                 String msg = URLEncoder.encode("Thêm thất bại! Email có thể đã tồn tại.", StandardCharsets.UTF_8);
-                resp.sendRedirect("list-user?type=" + typeRedirect + "&msg=" + msg);
+                resp.sendRedirect("list-user?type=" + typeRedirect + "&msg=" + msg + "&error=1");
             }
         } catch (Exception e) {
             e.printStackTrace();
-            resp.sendRedirect("list-user?msg=" + URLEncoder.encode("Lỗi hệ thống!", StandardCharsets.UTF_8));
+            String msg = URLEncoder.encode("Lỗi hệ thống!", StandardCharsets.UTF_8);
+            resp.sendRedirect("list-user?msg=" + msg + "&error=1");
         }
     }
 
     private void updateUser(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        int id = Integer.parseInt(req.getParameter("id"));
-        int seminarId = Integer.parseInt(req.getParameter("seminarId"));
-        Register r = registerRepository.findById(id);
+        try {
+            int id = Integer.parseInt(req.getParameter("id"));
+            int seminarId = Integer.parseInt(req.getParameter("seminarId"));
+            Register r = registerRepository.findById(id);
 
-        if (r != null) {
-            r.setName(req.getParameter("fullname"));
-            r.setEmail(req.getParameter("email"));
-            r.setPhone(req.getParameter("phone"));
-            r.setUserType(req.getParameter("type"));
-            r.setSeminarId(seminarId);
-            registerRepository.update(r);
+            if (r != null) {
+                r.setName(req.getParameter("fullname"));
+                r.setEmail(req.getParameter("email"));
+                r.setPhone(req.getParameter("phone"));
+                r.setUserType(req.getParameter("type"));
+                r.setSeminarId(seminarId);
+                registerRepository.update(r);
+            }
+
+            String typeRedirect = getTypeBySeminarId(seminarId);
+            String msg = URLEncoder.encode("Cập nhật thành công!", StandardCharsets.UTF_8);
+            resp.sendRedirect("list-user?type=" + typeRedirect + "&msg=" + msg);
+        } catch (Exception e) {
+            e.printStackTrace();
+            String msg = URLEncoder.encode("Cập nhật thất bại!", StandardCharsets.UTF_8);
+            resp.sendRedirect("list-user?msg=" + msg + "&error=1");
         }
-
-        String typeRedirect = getTypeBySeminarId(seminarId);
-        String msg = URLEncoder.encode("Cập nhật thành công!", StandardCharsets.UTF_8);
-        resp.sendRedirect("list-user?type=" + typeRedirect + "&msg=" + msg);
     }
 
     private void showAddForm(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

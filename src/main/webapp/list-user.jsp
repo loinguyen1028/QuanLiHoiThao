@@ -78,11 +78,18 @@
 
     <%-- THÔNG BÁO (Popup xanh/đỏ) --%>
     <%
-        String msg = (String) request.getAttribute("msg");
+        // LẤY TỪ PARAM vì servlet redirect bằng ?msg=...
+        String msg = request.getParameter("msg");
+        String error = request.getParameter("error"); // nếu không null => là lỗi
+        boolean isError = (error != null && !error.isEmpty());
+
         if (msg != null && !msg.isEmpty()) {
     %>
-    <div class="alert alert-success alert-dismissible fade show mt-3 shadow-sm" role="alert" style="border-radius: 10px;">
-        <i class="fas fa-check-circle me-2"></i> <strong>Thành công!</strong> <%= msg %>
+    <div class="alert <%= isError ? "alert-danger" : "alert-success" %> alert-dismissible fade show mt-3 shadow-sm"
+         role="alert" style="border-radius: 10px;">
+        <i class="fas <%= isError ? "fa-exclamation-circle" : "fa-check-circle" %> me-2"></i>
+        <strong><%= isError ? "Thất bại!" : "Thành công!" %></strong>
+        &nbsp; <%= msg %>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
     <% } %>
@@ -221,8 +228,11 @@
 
             <%-- PHÂN TRANG --%>
             <%
-                int currentPage = (Integer) request.getAttribute("currentPage");
-                int totalPages = (Integer) request.getAttribute("totalPages");
+                // Các attribute currentPage / totalPages nên được set bởi controller/servlet list-user
+                Integer currentPageObj = (Integer) request.getAttribute("currentPage");
+                Integer totalPagesObj = (Integer) request.getAttribute("totalPages");
+                int currentPage = (currentPageObj != null) ? currentPageObj : 1;
+                int totalPages = (totalPagesObj != null) ? totalPagesObj : 1;
             %>
 
             <% if (totalPages > 1) { %>
