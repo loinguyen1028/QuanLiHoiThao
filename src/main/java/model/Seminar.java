@@ -31,7 +31,6 @@ public class Seminar {
     public Seminar() {
     }
 
-<<<<<<< HEAD
     public Seminar(String name, String description, LocalDateTime start_date, LocalDateTime end_date, String location, String speaker, int categoryId, int maxAttendance, String image, String status) {
         this.name = name;
         this.description = description;
@@ -45,13 +44,10 @@ public class Seminar {
         this.status = status;
     }
 
-    public Seminar(int id, String name, String description, LocalDateTime start_date, LocalDateTime end_date, String location, String speaker, int categoryId, int maxAttendance, String image, String status) {
-=======
-    // Constructor đầy đủ (Dùng khi lấy dữ liệu từ DB lên)
+
     public Seminar(int id, String name, String description, LocalDateTime start_date, LocalDateTime end_date,
                    String location, String speaker, int categoryId, int maxAttendance, String image,
                    String status, Timestamp registrationOpen, Timestamp registrationDeadline) {
->>>>>>> 675a235dbff3f08b3b88b81392c0361b785e8b64
         this.id = id;
         this.name = name;
         this.description = description;
@@ -63,11 +59,10 @@ public class Seminar {
         this.maxAttendance = maxAttendance;
         this.image = image;
         this.status = status;
-<<<<<<< HEAD
-=======
         this.registrationOpen = registrationOpen;
         this.registrationDeadline = registrationDeadline;
->>>>>>> 675a235dbff3f08b3b88b81392c0361b785e8b64
+        this.registrationOpen = registrationOpen;
+        this.registrationDeadline = registrationDeadline;
     }
 
     // Constructor ngắn gọn (Dùng khi tạo mới, chưa có ID)

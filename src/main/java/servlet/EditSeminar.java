@@ -19,7 +19,7 @@ import utils.FileUploadUtil;
 
 import javax.sql.DataSource;
 import java.io.IOException;
-import java.sql.Timestamp; // ✅ Cần import dòng này
+import java.sql.Timestamp; 
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -113,12 +113,9 @@ public class EditSeminar extends HttpServlet {
 
             // 4. Xử lý ảnh (Upload hoặc giữ ảnh cũ)
             Part imagePart = request.getPart("image");
-<<<<<<< HEAD
 
             String status = "Đang mở đăng kí";
 
-=======
->>>>>>> 675a235dbff3f08b3b88b81392c0361b785e8b64
             String imagePath = "";
 
             // Lấy thông tin cũ để giữ lại ảnh và status (nếu form không gửi status)
@@ -135,12 +132,9 @@ public class EditSeminar extends HttpServlet {
                 // String appPath = FileUploadUtil.safeAppRealPath(getServletContext());
                 String appPath = "D:/"; // Đường dẫn lưu ảnh của bạn
                 imagePath = FileUploadUtil.uploadImageReturnPath(imagePart, "banner", appPath);
-            }
-<<<<<<< HEAD
+
             Seminar  seminar = new Seminar(id, name, description, startDate, endDate,
                     location, speaker, categoryId, maxAttendance, imagePath, status);
-=======
->>>>>>> 675a235dbff3f08b3b88b81392c0361b785e8b64
 
             // 5. Tạo đối tượng Seminar với Constructor ĐẦY ĐỦ
             // Thứ tự tham số phải khớp với Constructor trong model/Seminar.java
