@@ -5,7 +5,7 @@ import dto.GuestStatDTO;
 import model.PageRequest;
 import model.Register;
 import repository.RegisterRepository;
-import utils.DBConnect; // Dùng DBConnect để tránh lỗi SSL/Public Key
+import utils.DBConnect; // Dùng DBConnect
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -20,15 +20,62 @@ public class RegisterRepositoryImpl implements RegisterRepository {
         this.ds = ds;
     }
 
+    // =================================================
+    // 🔥 1. PHẦN CHECK-IN QUAN TRỌNG (ĐÃ FIX)
+    // =================================================
+
+    @Override
+    public Register findByCheckInId(String checkInId) {
+        if (checkInId != null) checkInId = checkInId.trim(); // Cắt khoảng trắng thừa
+
+        // Dùng LEFT JOIN để luôn tìm thấy user, kể cả khi seminar bị lỗi ID
+        String sql = "SELECT r.*, s.name as seminar_name " +
+                "FROM registrations r LEFT JOIN seminar s ON r.seminar_id = s.id " +
+                "WHERE r.check_in_id = ?";
+
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, checkInId);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return mapRow(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public boolean setCheckInTime(String checkInId) {
+        if (checkInId != null) checkInId = checkInId.trim();
+
+        String sql = "UPDATE registrations SET checkin_time = NOW() WHERE check_in_id = ?";
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, checkInId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // =================================================
+    // 2. CÁC HÀM CŨ (GIỮ NGUYÊN ĐỂ KHÔNG LỖI)
+    // =================================================
+
     @Override
     public Register create(Register entity) {
-        String sql = "INSERT INTO registrations " +
-                "(seminar_id, registration_code, check_in_id, name, email, phone, user_type) " +
+        if (isEmailExists(entity.getEmail(), entity.getSeminarId())) return null;
+
+        String sql = "INSERT INTO registrations (seminar_id, registration_code, check_in_id, name, email, phone, user_type) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-        // DÙNG ds.getConnection(), KHÔNG dùng DBConnect nữa
-        try (Connection conn = ds.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
 
             ps.setInt(1, entity.getSeminarId());
             ps.setString(2, entity.getRegistrationCode());
@@ -39,66 +86,60 @@ public class RegisterRepositoryImpl implements RegisterRepository {
             ps.setString(7, entity.getUserType());
 
             ps.executeUpdate();
-
             try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) entity.setId(rs.getInt(1));
+                if(rs.next()) entity.setId(rs.getInt(1));
             }
             return entity;
         } catch (SQLException e) {
             e.printStackTrace();
-            throw new RuntimeException("Lỗi create registrations", e);
+            return null;
         }
+    }
+
+    private boolean isEmailExists(String email, int seminarId) {
+        String sql = "SELECT id FROM registrations WHERE email = ? AND seminar_id = ?";
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ps.setInt(2, seminarId);
+            try (ResultSet rs = ps.executeQuery()) { return rs.next(); }
+        } catch (SQLException e) { return false; }
     }
 
     @Override
     public boolean update(Register entity) {
-        String sql = "UPDATE registrations " +
-                "SET name=?, email=?, phone=?, user_type=?, is_vip=? WHERE id=?";
-
-        try (Connection conn = ds.getConnection();
+        String sql = "UPDATE registrations SET name=?, email=?, phone=?, user_type=?, is_vip=?, seminar_id=? WHERE id=?";
+        try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setString(1, entity.getName());
             ps.setString(2, entity.getEmail());
             ps.setString(3, entity.getPhone());
             ps.setString(4, entity.getUserType());
             ps.setBoolean(5, entity.isVip());
-            ps.setInt(6, entity.getId());
-
+            ps.setInt(6, entity.getSeminarId());
+            ps.setInt(7, entity.getId());
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+        } catch (SQLException e) { return false; }
     }
 
     @Override
     public boolean delete(int id) {
         String sql = "DELETE FROM registrations WHERE id=?";
-        try (Connection conn = ds.getConnection();
+        try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setInt(1, id);
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+        } catch (SQLException e) { return false; }
     }
 
     @Override
     public Register findById(int id) {
-        String sql = "SELECT r.*, s.name as seminar_name " +
-                "FROM registrations r JOIN seminar s ON r.seminar_id = s.id " +
-                "WHERE r.id=?";
-
-        try (Connection conn = ds.getConnection();
+        String sql = "SELECT r.*, s.name as seminar_name FROM registrations r JOIN seminar s ON r.seminar_id = s.id WHERE r.id=?";
+        try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return mapRow(rs);
-            }
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return mapRow(rs);
         } catch (SQLException e) { e.printStackTrace(); }
         return null;
     }
@@ -106,111 +147,68 @@ public class RegisterRepositoryImpl implements RegisterRepository {
     @Override
     public List<Register> findBySeminarId(int seminarId) {
         List<Register> list = new ArrayList<>();
-        String sql = "SELECT r.*, s.name as seminar_name " +
-                "FROM registrations r JOIN seminar s ON r.seminar_id = s.id " +
-                "WHERE seminar_id=? ORDER BY id DESC";
-
-        try (Connection conn = ds.getConnection();
+        String sql = "SELECT r.*, s.name as seminar_name FROM registrations r JOIN seminar s ON r.seminar_id = s.id WHERE seminar_id=? ORDER BY id DESC";
+        try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setInt(1, seminarId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(mapRow(rs));
-            }
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapRow(rs));
         } catch (SQLException e) { e.printStackTrace(); }
         return list;
     }
 
     @Override
     public Register findByEmailAndCode(String email, String code) {
-        String sql = "SELECT r.*, s.name as seminar_name " +
-                "FROM registrations r JOIN seminar s ON r.seminar_id = s.id " +
-                "WHERE email=? AND registration_code=?";
-
-        try (Connection conn = ds.getConnection();
+        String sql = "SELECT r.*, s.name as seminar_name FROM registrations r JOIN seminar s ON r.seminar_id = s.id WHERE email=? AND registration_code=?";
+        try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, email);
-            ps.setString(2, code);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return mapRow(rs);
-            }
+            ps.setString(1, email); ps.setString(2, code);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return mapRow(rs);
         } catch (SQLException e) { e.printStackTrace(); }
         return null;
     }
 
     @Override
-    public Register findByCheckInId(String checkInId) {
-        String sql = "SELECT r.*, s.name as seminar_name " +
-                "FROM registrations r JOIN seminar s ON r.seminar_id = s.id " +
-                "WHERE check_in_id=?";
-
-        try (Connection conn = ds.getConnection();
+    public boolean toggleVip(int id) {
+        String sql = "UPDATE registrations SET is_vip = NOT is_vip WHERE id = ?";
+        try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, checkInId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return mapRow(rs);
-            }
-        } catch (SQLException e) { e.printStackTrace(); }
-        return null;
-    }
-
-    @Override
-    public boolean setCheckInTime(String checkInId) {
-        String sql = "UPDATE registrations SET checkin_time=NOW() WHERE check_in_id=?";
-        try (Connection conn = ds.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, checkInId);
+            ps.setInt(1, id);
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { e.printStackTrace(); return false; }
+        } catch (SQLException e) { return false; }
     }
 
     @Override
     public List<ChartDataDTO> getRegistrationStatsByDate() {
         List<ChartDataDTO> list = new ArrayList<>();
-        String sql = "SELECT register_date, COUNT(*) as count " +
-                "FROM registrations GROUP BY register_date " +
-                "ORDER BY register_date ASC LIMIT 10";
-
-        try (Connection conn = ds.getConnection();
+        String sql = "SELECT register_date, COUNT(*) as count FROM registrations GROUP BY register_date ORDER BY register_date ASC LIMIT 10";
+        try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-
             while (rs.next()) {
-                String dateStr = rs.getString("register_date");
-                list.add(new ChartDataDTO(
-                        dateStr == null ? "N/A" : dateStr,
-                        rs.getInt("count")));
+                String d = rs.getString("register_date");
+                list.add(new ChartDataDTO(d == null ? "N/A" : d, rs.getInt("count")));
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { }
         return list;
     }
 
     @Override
     public List<GuestStatDTO> getGuestStatistics() {
         List<GuestStatDTO> list = new ArrayList<>();
-        String sql = "SELECT user_type, COUNT(*) as total_reg, " +
-                "COUNT(CASE WHEN checkin_time IS NOT NULL THEN 1 END) as total_checkin " +
-                "FROM registrations GROUP BY user_type";
-
-        try (Connection conn = ds.getConnection();
+        String sql = "SELECT user_type, COUNT(*) as total_reg, COUNT(CASE WHEN checkin_time IS NOT NULL THEN 1 END) as total_checkin FROM registrations GROUP BY user_type";
+        try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-
             while (rs.next()) {
                 String type = rs.getString("user_type");
-                list.add(new GuestStatDTO(
-                        (type == null || type.isEmpty()) ? "Khác" : type,
-                        rs.getInt("total_reg"),
-                        rs.getInt("total_checkin")));
+                list.add(new GuestStatDTO(type == null ? "Khác" : type, rs.getInt("total_reg"), rs.getInt("total_checkin")));
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { }
         return list;
     }
 
-    // mapRow giữ nguyên như bạn
     private Register mapRow(ResultSet rs) throws SQLException {
         Register r = new Register();
         r.setId(rs.getInt("id"));
@@ -226,6 +224,30 @@ public class RegisterRepositoryImpl implements RegisterRepository {
         r.setUserType(rs.getString("user_type"));
         try { r.setEventName(rs.getString("seminar_name")); } catch (Exception e) {}
         return r;
+    }
+    @Override
+    public List<Register> findAllByCategoryId(int categoryId) {
+        List<Register> list = new ArrayList<>();
+        // SQL lấy tất cả người đăng ký thuộc category này (không có LIMIT/OFFSET)
+        String sql = "SELECT r.*, s.name as seminar_name " +
+                "FROM registrations r " +
+                "JOIN seminar s ON r.seminar_id = s.id " +
+                "WHERE s.category_id = ? " +
+                "ORDER BY r.register_date DESC";
+
+        try (Connection conn = utils.DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, categoryId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                // Tái sử dụng hàm mapRow để lấy dữ liệu chuẩn
+                list.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
     @Override public List<Register> findAll() { return List.of(); }

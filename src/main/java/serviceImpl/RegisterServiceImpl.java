@@ -2,6 +2,7 @@ package serviceImpl;
 
 import dto.ChartDataDTO;
 import dto.GuestStatDTO;
+import model.Register;
 import repository.RegisterRepository;
 import repositoryImpl.RegisterRepositoryImpl;
 import service.RegisterService;
@@ -25,5 +26,24 @@ public class RegisterServiceImpl implements RegisterService {
     @Override
     public List<GuestStatDTO> getGuestStatistics() {
         return this.registerRepository.getGuestStatistics();
+    }
+    @Override
+    public boolean toggleVip(int id) {
+        return registerRepository.toggleVip(id);
+    }
+
+    // --- TRIỂN KHAI CHECK-IN ---
+    @Override
+    public Register findByCheckInId(String checkInId) {
+        return registerRepository.findByCheckInId(checkInId);
+    }
+
+    @Override
+    public boolean checkInUser(String checkInId) {
+        return registerRepository.setCheckInTime(checkInId);
+    }
+    @Override
+    public List<Register> findAllByCategoryId(int categoryId) {
+        return registerRepository.findAllByCategoryId(categoryId);
     }
 }

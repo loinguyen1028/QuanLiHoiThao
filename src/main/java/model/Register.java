@@ -8,7 +8,7 @@ public class Register {
     private int seminarId;
     private Date registerDate;
     private String registrationCode; // Mã bí mật (để sửa)
-    private String checkInId;        // Mã công khai (để check-in/QR) --> CỘT MỚI
+    private String checkInId;        // Mã công khai (để check-in/QR)
     private boolean vip;
     private Timestamp checkinTime;
 
@@ -18,8 +18,7 @@ public class Register {
     private String phone;
     private String userType;
 
-    // Biến phụ để hiển thị tên hội thảo
-    private String eventName;
+    private String eventName; // Biến phụ
 
     public Register() {}
 

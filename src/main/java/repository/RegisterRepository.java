@@ -8,21 +8,18 @@ import java.util.List;
 
 public interface RegisterRepository extends Repository<Register> {
 
-    // --- Các hàm Thống kê cũ ---
+    // --- Các hàm Thống kê (Cũ) ---
     List<ChartDataDTO> getRegistrationStatsByDate();
     List<GuestStatDTO> getGuestStatistics();
 
-    // --- CÁC HÀM MỚI CẦN THÊM VÀO ĐÂY (Để sửa lỗi) ---
-
-    // 1. Tìm danh sách theo ID hội thảo
+    // --- Các hàm Nghiệp vụ (Cũ) ---
     List<Register> findBySeminarId(int seminarId);
-
-    // 2. Tìm người dùng để sửa (Mã bí mật)
     Register findByEmailAndCode(String email, String registrationCode);
+    boolean toggleVip(int id);
 
-    // 3. Tìm người dùng để check-in (Mã công khai)
+    // --- HÀM MỚI CHO CHECK-IN (BẮT BUỘC PHẢI CÓ) ---
     Register findByCheckInId(String checkInId);
-
-    // 4. Cập nhật giờ check-in
     boolean setCheckInTime(String checkInId);
+
+    List<Register> findAllByCategoryId(int categoryId);
 }
