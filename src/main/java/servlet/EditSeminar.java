@@ -19,7 +19,7 @@ import utils.FileUploadUtil;
 
 import javax.sql.DataSource;
 import java.io.IOException;
-import java.sql.Timestamp; 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -71,7 +71,7 @@ public class EditSeminar extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
-            request.setCharacterEncoding("UTF-8"); // Đảm bảo không lỗi font tiếng Việt
+            request.setCharacterEncoding("UTF-8");
 
             int id = Integer.parseInt(request.getParameter("seminarId"));
 
@@ -83,7 +83,7 @@ public class EditSeminar extends HttpServlet {
             int maxAttendance = Integer.parseInt(request.getParameter("maxAttendance"));
             String description = request.getParameter("description");
 
-            // Lấy status (nếu form edit có cho sửa status, nếu không thì giữ nguyên logic bên dưới)
+            // Lấy status từ form (nếu có)
             String status = request.getParameter("status");
 
             // 2. Xử lý ngày bắt đầu - kết thúc (LocalDateTime)
@@ -95,7 +95,7 @@ public class EditSeminar extends HttpServlet {
             LocalDateTime startDate = (startDateString != null && !startDateString.isEmpty())
                     ? LocalDateTime.parse(startDateString) : null;
 
-            // 3. [MỚI] Xử lý ngày mở đăng ký - hạn chót (Timestamp)
+            // 3. Xử lý ngày mở đăng ký - hạn chót (Timestamp)
             String regOpenStr = request.getParameter("registrationOpen");
             String regDeadlineStr = request.getParameter("registrationDeadline");
 
@@ -103,7 +103,6 @@ public class EditSeminar extends HttpServlet {
             Timestamp registrationDeadline = null;
 
             if (regOpenStr != null && !regOpenStr.isEmpty()) {
-                // LocalDateTime.parse hiểu định dạng "yyyy-MM-ddTHH:mm" của input type="datetime-local"
                 registrationOpen = Timestamp.valueOf(LocalDateTime.parse(regOpenStr));
             }
 
@@ -113,17 +112,15 @@ public class EditSeminar extends HttpServlet {
 
             // 4. Xử lý ảnh (Upload hoặc giữ ảnh cũ)
             Part imagePart = request.getPart("image");
-
-            String status = "Đang mở đăng kí";
-
             String imagePath = "";
 
             // Lấy thông tin cũ để giữ lại ảnh và status (nếu form không gửi status)
             Seminar oldSeminar = seminarService.findById(id);
             if (oldSeminar != null) {
                 imagePath = oldSeminar.getImage();
+                // Nếu form không gửi status lên (null) thì giữ nguyên status cũ
                 if (status == null) {
-                    status = oldSeminar.getStatus(); // Giữ status cũ nếu form không gửi
+                    status = oldSeminar.getStatus();
                 }
             }
 
@@ -132,12 +129,11 @@ public class EditSeminar extends HttpServlet {
                 // String appPath = FileUploadUtil.safeAppRealPath(getServletContext());
                 String appPath = "D:/"; // Đường dẫn lưu ảnh của bạn
                 imagePath = FileUploadUtil.uploadImageReturnPath(imagePart, "banner", appPath);
+            } // <--- [FIX 1] Đã thêm dấu đóng ngoặc nhọn bị thiếu ở đây
 
-            Seminar  seminar = new Seminar(id, name, description, startDate, endDate,
-                    location, speaker, categoryId, maxAttendance, imagePath, status);
+            // [FIX 2] Đã xóa dòng khai báo Seminar cũ bị trùng lặp ở đây
 
             // 5. Tạo đối tượng Seminar với Constructor ĐẦY ĐỦ
-            // Thứ tự tham số phải khớp với Constructor trong model/Seminar.java
             Seminar seminar = new Seminar(
                     id,
                     name,
