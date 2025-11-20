@@ -21,10 +21,19 @@
     if (seminar.getRegistrationDeadline() != null) {
         regDeadlineVal = isoFormat.format(seminar.getRegistrationDeadline());
     }
+
+    String errorMessage = (String) request.getAttribute("errorMessage");
 %>
 
 <div class="container-fluid mt-4">
-
+    <% if (errorMessage != null && !errorMessage.isEmpty()) { %>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Có lỗi xảy ra!</strong> <%= errorMessage %>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <% } %>
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0 text-gray-800">Chỉnh sửa hội thảo</h1>
         <a href="seminar_management" class="btn btn-sm btn-secondary shadow-sm">
@@ -133,25 +142,6 @@
                                     </div>
                                 </div>
 
-                                <div class="row bg-light p-2 rounded border mb-3">
-                                    <div class="col-12 mb-2">
-                                        <small class="text-primary font-weight-bold">Cài đặt thời gian đăng ký (Tùy chọn)</small>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="registrationOpen">Mở cổng đăng ký</label>
-                                            <input type="datetime-local" class="form-control" id="registrationOpen" name="registrationOpen"
-                                                   value="<%= regOpenVal %>">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="registrationDeadline">Hạn chót đăng ký</label>
-                                            <input type="datetime-local" class="form-control" id="registrationDeadline" name="registrationDeadline"
-                                                   value="<%= regDeadlineVal %>">
-                                        </div>
-                                    </div>
-                                </div>
 
                             </div>
                         </div>

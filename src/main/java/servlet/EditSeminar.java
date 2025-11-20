@@ -72,10 +72,22 @@ public class EditSeminar extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             request.setCharacterEncoding("UTF-8");
-
             int id = Integer.parseInt(request.getParameter("seminarId"));
 
-            // 1. Lấy thông tin cơ bản
+            Seminar oldSeminar = seminarService.findById(id);
+            if (oldSeminar == null) {
+                throw new IllegalArgumentException("Không tìm thấy hội thảo có ID: " + id);
+            }
+            //Lấy ngày bắt đầu MỚI và kiểm tra Logic
+            String startDateString = request.getParameter("startDate");
+            LocalDateTime newStartDate = LocalDateTime.parse(startDateString);
+
+            //Ngày mới không được sớm hơn ngày cũ
+            if (newStartDate.isBefore(oldSeminar.getStart_date())) {
+                String oldDateStr = oldSeminar.getStart_date().toString().replace("T", " ");
+                throw new IllegalArgumentException("Ngày bắt đầu mới không được sớm hơn ngày cũ (" + oldDateStr + ")");
+            }
+
             String name = request.getParameter("seminarName");
             String speaker = request.getParameter("speaker");
             String location = request.getParameter("location");
@@ -83,85 +95,46 @@ public class EditSeminar extends HttpServlet {
             int maxAttendance = Integer.parseInt(request.getParameter("maxAttendance"));
             String description = request.getParameter("description");
 
-            // Lấy status từ form (nếu có)
-            String status = request.getParameter("status");
-
-            // 2. Xử lý ngày bắt đầu - kết thúc (LocalDateTime)
             String endDateString = request.getParameter("endDate");
-            LocalDateTime endDate = (endDateString != null && !endDateString.isEmpty())
-                    ? LocalDateTime.parse(endDateString) : null;
+            LocalDateTime endDate = LocalDateTime.parse(endDateString);
 
-            String startDateString = request.getParameter("startDate");
-            LocalDateTime startDate = (startDateString != null && !startDateString.isEmpty())
-                    ? LocalDateTime.parse(startDateString) : null;
-
-            // 3. Xử lý ngày mở đăng ký - hạn chót (Timestamp)
-            String regOpenStr = request.getParameter("registrationOpen");
-            String regDeadlineStr = request.getParameter("registrationDeadline");
-
-            Timestamp registrationOpen = null;
-            Timestamp registrationDeadline = null;
-
-            if (regOpenStr != null && !regOpenStr.isEmpty()) {
-                registrationOpen = Timestamp.valueOf(LocalDateTime.parse(regOpenStr));
+            //Ngày kết thúc phải sau ngày bắt đầu
+            if (endDate.isBefore(newStartDate)) {
+                throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu!");
             }
 
-            if (regDeadlineStr != null && !regDeadlineStr.isEmpty()) {
-                registrationDeadline = Timestamp.valueOf(LocalDateTime.parse(regDeadlineStr));
-            }
+            Timestamp registrationOpen = Timestamp.valueOf(newStartDate.minusDays(7));
+            Timestamp registrationDeadline = Timestamp.valueOf(newStartDate.minusDays(1));
 
-            // 4. Xử lý ảnh (Upload hoặc giữ ảnh cũ)
             Part imagePart = request.getPart("image");
-            String imagePath = "";
+            String imagePath = oldSeminar.getImage();
 
-            // Lấy thông tin cũ để giữ lại ảnh và status (nếu form không gửi status)
-            Seminar oldSeminar = seminarService.findById(id);
-            if (oldSeminar != null) {
-                imagePath = oldSeminar.getImage();
-                // Nếu form không gửi status lên (null) thì giữ nguyên status cũ
-                if (status == null) {
-                    status = oldSeminar.getStatus();
-                }
-            }
-
-            // Nếu có file mới được upload
+            // Kiểm tra nếu người dùng có upload ảnh mới
             if (imagePart != null && imagePart.getSize() > 0 && imagePart.getSubmittedFileName() != null && !imagePart.getSubmittedFileName().isEmpty()) {
-                // String appPath = FileUploadUtil.safeAppRealPath(getServletContext());
-                String appPath = "D:/"; // Đường dẫn lưu ảnh của bạn
+                String appPath = "D:/";
                 imagePath = FileUploadUtil.uploadImageReturnPath(imagePart, "banner", appPath);
-            } // <--- [FIX 1] Đã thêm dấu đóng ngoặc nhọn bị thiếu ở đây
+            }
+            Seminar seminar = new Seminar( id, name, description, newStartDate, endDate, location, speaker,
+                    categoryId, maxAttendance, imagePath, registrationOpen, registrationDeadline);
 
-            // [FIX 2] Đã xóa dòng khai báo Seminar cũ bị trùng lặp ở đây
-
-            // 5. Tạo đối tượng Seminar với Constructor ĐẦY ĐỦ
-            Seminar seminar = new Seminar(
-                    id,
-                    name,
-                    description,
-                    startDate,
-                    endDate,
-                    location,
-                    speaker,
-                    categoryId,
-                    maxAttendance,
-                    imagePath,
-                    status,
-                    registrationOpen,
-                    registrationDeadline
-            );
-
-            // 6. Gọi Service update
             if (seminarService.update(seminar)) {
                 response.sendRedirect(request.getContextPath() + "/seminar_management?msg=success");
             } else {
-                request.setAttribute("error", "Cập nhật thất bại");
-                request.setAttribute("seminar", seminar);
-                request.setAttribute("categories", categoryService.findAll());
-                request.getRequestDispatcher("/edit-seminar.jsp").forward(request, response);
+                throw new Exception("Lỗi khi cập nhật vào Database.");
             }
+
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/seminar_management?error=exception");
+            request.setAttribute("errorMessage", "Lỗi: " + e.getMessage());
+            try {
+                int id = Integer.parseInt(request.getParameter("seminarId"));
+                Seminar currentSeminar = seminarService.findById(id);
+                request.setAttribute("seminar", currentSeminar);
+                request.setAttribute("categories", categoryService.findAll());
+            } catch (Exception ex) {
+
+            }
+            request.getRequestDispatcher("/edit-seminar.jsp").forward(request, response);
         }
     }
 }

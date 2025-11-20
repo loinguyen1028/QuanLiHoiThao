@@ -7,27 +7,18 @@ public class Seminar {
     private int id;
     private String name;
     private String description;
-
-    // Dùng LocalDateTime cho ngày diễn ra (giữ nguyên như code cũ của bạn)
     private LocalDateTime start_date;
     private LocalDateTime end_date;
-
     private String location;
     private String speaker;
     private int categoryId;
     private int maxAttendance;
     private String status;
     private String image;
-
-    // ✅ Hai trường mới dùng Timestamp để tương thích với Database và logic JSP
     private Timestamp registrationOpen;
     private Timestamp registrationDeadline;
 
-    // ==========================
-    // 1. CONSTRUCTORS
-    // ==========================
 
-    // Constructor rỗng (Bắt buộc phải có)
     public Seminar() {
     }
 
@@ -47,7 +38,7 @@ public class Seminar {
 
     public Seminar(int id, String name, String description, LocalDateTime start_date, LocalDateTime end_date,
                    String location, String speaker, int categoryId, int maxAttendance, String image,
-                   String status, Timestamp registrationOpen, Timestamp registrationDeadline) {
+                   Timestamp registrationOpen, Timestamp registrationDeadline) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -58,7 +49,6 @@ public class Seminar {
         this.categoryId = categoryId;
         this.maxAttendance = maxAttendance;
         this.image = image;
-        this.status = status;
         this.registrationOpen = registrationOpen;
         this.registrationDeadline = registrationDeadline;
         this.registrationOpen = registrationOpen;
@@ -78,10 +68,6 @@ public class Seminar {
         this.maxAttendance = maxAttendance;
         this.image = image;
     }
-
-    // ==========================
-    // 2. GETTER & SETTER
-    // ==========================
 
     public int getId() {
         return id;

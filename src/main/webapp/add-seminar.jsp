@@ -4,10 +4,20 @@
 <jsp:include page="admin-header.jsp" />
 <%
     List<Category> categories = (List<Category>) request.getAttribute("categories");
+    String errorMessage = (String) request.getAttribute("errorMessage");
+    System.out.println(errorMessage);
 %>
 
 <!-- BẮT ĐẦU NỘI DUNG TRANG -->
 <div class="container-fluid mt-4">
+    <% if (errorMessage != null && !errorMessage.isEmpty()) { %>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Có lỗi xảy ra!</strong> <%= errorMessage %>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <% } %>
 
     <!-- Tiêu đề trang -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">

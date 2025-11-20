@@ -19,6 +19,7 @@ import utils.FileUploadUtil;
 
 import javax.sql.DataSource;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -44,39 +45,77 @@ public class AddSeminar extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         List<Category> categories = categoryService.findAll();
-
         request.setAttribute("categories", categories);
         request.getRequestDispatcher("/add-seminar.jsp").forward(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String name =  request.getParameter("seminarName");
-        String speaker = request.getParameter("speaker");
-        String location = request.getParameter("location");
-        int category = Integer.parseInt(request.getParameter("categoryId"));
-        int maxAttendance = Integer.parseInt(request.getParameter("maxAttendance"));
+        try {
+            request.setCharacterEncoding("UTF-8");
 
-        String endDateString = request.getParameter("endDate");
-        LocalDateTime endDate = LocalDateTime.parse(endDateString);
-        String startDateString = request.getParameter("startDate");
-        LocalDateTime startDate = LocalDateTime.parse(startDateString);
-        String status = "Đang mở đăng kí";
-        String description = request.getParameter("description");
+            String name = request.getParameter("seminarName");
+            String speaker = request.getParameter("speaker");
+            String location = request.getParameter("location");
+            int category = Integer.parseInt(request.getParameter("categoryId"));
+            int maxAttendance = Integer.parseInt(request.getParameter("maxAttendance"));
+            String description = request.getParameter("description");
 
-        Part imagePart = request.getPart("image");
-        String imagePath = "";
+            // Xử lý ngày bắt đầu & kết thúc
+            String endDateString = request.getParameter("endDate");
+            LocalDateTime endDate = LocalDateTime.parse(endDateString);
 
-        if (imagePart != null && imagePart.getSize() > 0 && imagePart.getSubmittedFileName() != null && !imagePart.getSubmittedFileName().isEmpty()) {
-            //String appPath = FileUploadUtil.safeAppRealPath(getServletContext());
-            String appPath = "D:/";
-            imagePath = FileUploadUtil.uploadImageReturnPath(imagePart, "banner", appPath);
+            String startDateString = request.getParameter("startDate");
+            LocalDateTime startDate = LocalDateTime.parse(startDateString);
+
+            LocalDateTime minValidDate = LocalDateTime.now().plusDays(8);
+
+            if (startDate.isBefore(minValidDate)) {
+                // Nếu ngày chọn NHỎ HƠN (sớm hơn) ngày hợp lệ
+                throw new IllegalArgumentException("Ngày bắt đầu phải cách ngày hiện tại ít nhất 8 ngày!");
+            }
+
+            // (Tùy chọn) Kiểm tra thêm: Ngày kết thúc phải sau ngày bắt đầu
+            if (endDate.isBefore(startDate)) {
+                throw new IllegalArgumentException("Ngày kết thúc không được trước ngày bắt đầu!");
+            }
+
+            Timestamp registrationOpen = null;
+            Timestamp registrationDeadline = null;
+
+            if (startDate != null) {
+                // Mở đăng ký trước 7 ngày
+                registrationOpen = Timestamp.valueOf(startDate.minusDays(7));
+                // Hạn chót trước 1 ngày
+                registrationDeadline = Timestamp.valueOf(startDate.minusDays(1));
+            }
+
+            // Xử lý ảnh
+            Part imagePart = request.getPart("image");
+            String imagePath = "";
+
+            if (imagePart != null && imagePart.getSize() > 0 && imagePart.getSubmittedFileName() != null && !imagePart.getSubmittedFileName().isEmpty()) {
+                String appPath = "D:/"; // Đường dẫn lưu ảnh
+                imagePath = FileUploadUtil.uploadImageReturnPath(imagePart, "banner", appPath);
+            }
+
+            Seminar seminar = new Seminar(name, description, startDate, endDate,
+                    location, speaker, category, maxAttendance, imagePath);
+
+            seminar.setRegistrationOpen(registrationOpen);
+            seminar.setRegistrationDeadline(registrationDeadline);
+
+            seminarService.create(seminar);
+
+            response.sendRedirect(request.getContextPath() + "/seminar_management?msg=add_success");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("errorMessage", e.getMessage());
+
+            List<Category> categories = categoryService.findAll();
+            request.setAttribute("categories", categories);
+            request.getRequestDispatcher("/add-seminar.jsp").forward(request, response);
         }
-        Seminar seminar = new Seminar(name, description, startDate, endDate,
-                location, speaker, category, maxAttendance, imagePath, status);
-
-        seminarService.create(seminar);
-
-        response.sendRedirect(request.getContextPath() + "/seminar_management");
     }
 }
