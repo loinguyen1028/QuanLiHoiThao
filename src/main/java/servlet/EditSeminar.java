@@ -2,7 +2,7 @@ package servlet;
 
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.MultipartConfig; // Quan trọng
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,10 +19,10 @@ import utils.FileUploadUtil;
 
 import javax.sql.DataSource;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
-// 1. THÊM @MultipartConfig ĐỂ XỬ LÝ UPLOAD FILE VÀ FORM DATA
 @WebServlet("/edit_seminar")
 @MultipartConfig(
         fileSizeThreshold = 1024 * 1024 * 1, // 1 MB
@@ -71,42 +71,86 @@ public class EditSeminar extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
+            request.setCharacterEncoding("UTF-8");
+
             int id = Integer.parseInt(request.getParameter("seminarId"));
 
-            String name =  request.getParameter("seminarName");
+            // 1. Lấy thông tin cơ bản
+            String name = request.getParameter("seminarName");
             String speaker = request.getParameter("speaker");
             String location = request.getParameter("location");
             int categoryId = Integer.parseInt(request.getParameter("categoryId"));
             int maxAttendance = Integer.parseInt(request.getParameter("maxAttendance"));
-
-            String endDateString = request.getParameter("endDate");
-            LocalDateTime endDate = LocalDateTime.parse(endDateString);
-
-            String startDateString = request.getParameter("startDate");
-            LocalDateTime startDate = LocalDateTime.parse(startDateString);
-
             String description = request.getParameter("description");
 
+            // Lấy status từ form (nếu có)
+            String status = request.getParameter("status");
+
+            // 2. Xử lý ngày bắt đầu - kết thúc (LocalDateTime)
+            String endDateString = request.getParameter("endDate");
+            LocalDateTime endDate = (endDateString != null && !endDateString.isEmpty())
+                    ? LocalDateTime.parse(endDateString) : null;
+
+            String startDateString = request.getParameter("startDate");
+            LocalDateTime startDate = (startDateString != null && !startDateString.isEmpty())
+                    ? LocalDateTime.parse(startDateString) : null;
+
+            // 3. Xử lý ngày mở đăng ký - hạn chót (Timestamp)
+            String regOpenStr = request.getParameter("registrationOpen");
+            String regDeadlineStr = request.getParameter("registrationDeadline");
+
+            Timestamp registrationOpen = null;
+            Timestamp registrationDeadline = null;
+
+            if (regOpenStr != null && !regOpenStr.isEmpty()) {
+                registrationOpen = Timestamp.valueOf(LocalDateTime.parse(regOpenStr));
+            }
+
+            if (regDeadlineStr != null && !regDeadlineStr.isEmpty()) {
+                registrationDeadline = Timestamp.valueOf(LocalDateTime.parse(regDeadlineStr));
+            }
+
+            // 4. Xử lý ảnh (Upload hoặc giữ ảnh cũ)
             Part imagePart = request.getPart("image");
-
-
             String imagePath = "";
 
-            // Lấy thông tin cũ để giữ lại ảnh nếu không upload ảnh mới
+            // Lấy thông tin cũ để giữ lại ảnh và status (nếu form không gửi status)
             Seminar oldSeminar = seminarService.findById(id);
             if (oldSeminar != null) {
                 imagePath = oldSeminar.getImage();
+                // Nếu form không gửi status lên (null) thì giữ nguyên status cũ
+                if (status == null) {
+                    status = oldSeminar.getStatus();
+                }
             }
 
             // Nếu có file mới được upload
             if (imagePart != null && imagePart.getSize() > 0 && imagePart.getSubmittedFileName() != null && !imagePart.getSubmittedFileName().isEmpty()) {
-                //String appPath = FileUploadUtil.safeAppRealPath(getServletContext());
-                String appPath = "D:/";
+                // String appPath = FileUploadUtil.safeAppRealPath(getServletContext());
+                String appPath = "D:/"; // Đường dẫn lưu ảnh của bạn
                 imagePath = FileUploadUtil.uploadImageReturnPath(imagePart, "banner", appPath);
-            }
-            Seminar  seminar = new Seminar(id, name, description, startDate, endDate,
-                    location, speaker, categoryId, maxAttendance, imagePath);
+            } // <--- [FIX 1] Đã thêm dấu đóng ngoặc nhọn bị thiếu ở đây
 
+            // [FIX 2] Đã xóa dòng khai báo Seminar cũ bị trùng lặp ở đây
+
+            // 5. Tạo đối tượng Seminar với Constructor ĐẦY ĐỦ
+            Seminar seminar = new Seminar(
+                    id,
+                    name,
+                    description,
+                    startDate,
+                    endDate,
+                    location,
+                    speaker,
+                    categoryId,
+                    maxAttendance,
+                    imagePath,
+                    status,
+                    registrationOpen,
+                    registrationDeadline
+            );
+
+            // 6. Gọi Service update
             if (seminarService.update(seminar)) {
                 response.sendRedirect(request.getContextPath() + "/seminar_management?msg=success");
             } else {

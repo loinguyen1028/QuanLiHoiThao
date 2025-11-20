@@ -4,18 +4,16 @@
     <div class="container py-5">
         <div class="row g-5">
             <div class="col-md-6 col-lg-3 wow fadeIn" data-wow-delay="0.1s">
-                <a href="index.html" class="d-inline-block mb-3">
-                    <h1 class="text-white">iSTUDIO</h1>
+                <a href="home.jsp" class="d-inline-block mb-3">
+                    <h1 class="text-white">LHQ SEMINAR</h1>
                 </a>
-                <p class="mb-0">Tempor erat elitr rebum at clita. Diam dolor diam ipsum et tempor sit. Aliqu diam
-                    amet diam et eos labore. Clita erat ipsum et lorem et sit, sed stet no labore lorem sit. Sanctus
-                    clita duo justo et tempor</p>
+                <p class="mb-0">Web đăng ký hội thảo của chúng tôi được vận hành bởi một tổ chức chuyên nghiệp, cung cấp thông tin rõ ràng, quy trình đăng ký nhanh chóng và các sự kiện chất lượng cao với đội ngũ diễn giả uy tín. Chúng tôi cam kết mang đến trải nghiệm học tập hiệu quả và đáng tin cậy cho mọi người tham gia.</p>
             </div>
             <div class="col-md-6 col-lg-3 wow fadeIn" data-wow-delay="0.3s">
-                <h5 class="text-white mb-4">Get In Touch</h5>
-                <p><i class="fa fa-map-marker-alt me-3"></i>123 Street, New York, USA</p>
-                <p><i class="fa fa-phone-alt me-3"></i>+012 345 67890</p>
-                <p><i class="fa fa-envelope me-3"></i>info@example.com</p>
+                <h5 class="text-white mb-4">Liên hệ</h5>
+                <p><i class="fa fa-map-marker-alt me-3"></i>01 Đ. Võ Văn Ngân, Linh Chiểu, Thủ Đức, TpHCM</p>
+                <p><i class="fa fa-phone-alt me-3"></i>+084 337 601937</p>
+                <p><i class="fa fa-envelope me-3"></i>lhqseminar@gmail.com</p>
                 <div class="d-flex pt-2">
                     <a class="btn btn-outline-primary btn-square border-2 me-2" href="#!"><i
                             class="fab fa-twitter"></i></a>
@@ -29,35 +27,19 @@
                             class="fab fa-linkedin-in"></i></a>
                 </div>
             </div>
-            <div class="col-md-6 col-lg-3 wow fadeIn" data-wow-delay="0.5s">
-                <h5 class="text-white mb-4">Popular Link</h5>
-                <a class="btn btn-link" href="#!">About Us</a>
-                <a class="btn btn-link" href="#!">Contact Us</a>
-                <a class="btn btn-link" href="#!">Privacy Policy</a>
-                <a class="btn btn-link" href="#!">Terms & Condition</a>
-                <a class="btn btn-link" href="#!">Career</a>
-            </div>
-            <div class="col-md-6 col-lg-3 wow fadeIn" data-wow-delay="0.7s">
-                <h5 class="text-white mb-4">Our Services</h5>
-                <a class="btn btn-link" href="#!">Interior Design</a>
-                <a class="btn btn-link" href="#!">Project Planning</a>
-                <a class="btn btn-link" href="#!">Renovation</a>
-                <a class="btn btn-link" href="#!">Implement</a>
-                <a class="btn btn-link" href="#!">Landscape Design</a>
-            </div>
+
         </div>
     </div>
     <div class="container wow fadeIn" data-wow-delay="0.1s">
         <div class="copyright">
             <div class="row">
                 <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-                    &copy; <a class="border-bottom" href="#!">Your Site Name</a>, All Right Reserved.
+                    &copy; <a class="border-bottom" href="#!">LHQ SEMINAR</a>, All Right Reserved.
 
                     <!--/*** This template is free as long as you keep the below author’s credit link/attribution link/backlink. ***/-->
                     <!--/*** If you'd like to use the template without the below author’s credit link/attribution link/backlink, ***/-->
                     <!--/*** you can purchase the Credit Removal License from "https://htmlcodex.com/credit-removal". ***/-->
-                    Designed By <a class="border-bottom" href="https://htmlcodex.com">HTML Codex</a>. Distributed by
-                    <a class="border-bottom" href="https://themewagon.com" target="_blank">ThemeWagon</a>
+                    Designed By <a class="border-bottom" href="">LHQ Team</a>.
                 </div>
                 <div class="col-md-6 text-center text-md-end">
                     <div class="footer-menu">

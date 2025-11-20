@@ -9,14 +9,37 @@
 <%@ page import="javax.sql.DataSource" %>
 
 <%
-    // Lấy 6 hội thảo mới nhất (sắp xếp theo start_date DESC)
     DataSource dsHome = DataSourceUtil.getDataSource();
     SeminarService seminarServiceHome = new SeminarServiceImpl(dsHome);
 
-    PageRequest prHome = new PageRequest(1, 6, "start_date", "desc", "");
+    String pageParam = request.getParameter("page");
+    int currentPageIndex = 1;
+    try {
+        if (pageParam != null) {
+            currentPageIndex = Integer.parseInt(pageParam);
+        }
+    } catch (NumberFormatException e) {
+        currentPageIndex = 1;
+    }
+
+    int pageSize = 6;
+
+    PageRequest prHome = new PageRequest(currentPageIndex, pageSize, "start_date", "desc", "");
     Page<Seminar> pageHome = seminarServiceHome.findAll(prHome);
-    List<Seminar> latestSeminars = pageHome != null ? pageHome.getData() : null;
+
+    List<Seminar> latestSeminars = java.util.Collections.emptyList();
+    int currentPage = 1;
+    int totalPages = 0;
+
+    if (pageHome != null) {
+        if (pageHome.getData() != null) {
+            latestSeminars = pageHome.getData();
+        }
+        currentPage = pageHome.getCurrentPage();
+        totalPages = pageHome.getTotalPage();
+    }
 %>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -50,9 +73,74 @@
 
         /* Tiêu đề đổi màu khi hover */
         .testimonial-item:hover h3 {
-            color: #009966; /* xanh primary bootstrap */
+            color: #009966;
             transition: color 0.3s ease;
         }
+        /* Khung ảnh đồng nhất */
+        .testimonial-item .seminar-thumb {
+            width: 100%;
+            height: 180px;             /* chỉnh tùy ý: 150px, 200px */
+            object-fit: cover;         /* không méo hình, auto crop */
+            border-radius: 10px;
+            transition: transform 0.4s ease, filter 0.4s ease;
+        }
+
+        /* Hiệu ứng hover (chỉ phóng nhẹ, không làm vỡ layout) */
+        .testimonial-item:hover .seminar-thumb {
+            transform: scale(1.03);
+            filter: brightness(1.1);
+        }
+        .testimonial-item:hover {
+            box-shadow: 0px 5px 18px rgba(0,0,0,0.13);
+            background: #fff;
+        }
+        /* ===== Ảnh đồng nhất ===== */
+        .testimonial-item .seminar-thumb {
+            width: 100%;
+            height: 180px;              /* bạn có thể chỉnh: 150/200/... */
+            object-fit: cover;          /* không méo hình, crop đẹp */
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        /* ===== CARD BÌNH THƯỜNG GIỐNG MÀU NỀN ===== */
+        .testimonial-item {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 15px;
+            border-radius: 12px;
+            background: transparent; /* CHỈNH TẠI ĐÂY */
+            transition: all 0.35s ease;
+            border: 1px solid rgba(0,0,0,0.03); /* giúp cân bằng bố cục nhẹ */
+        }
+
+
+        /* đảm bảo card không bị lệch giữa các col */
+        .col-lg-6 > .testimonial-item {
+            height: 100%;
+        }
+
+        /* ===== HIỆU ỨNG HOVER VẪN GIỮ ===== */
+        .testimonial-item:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+            background: #ffffff;
+        }
+
+        /* Ảnh cũng có hiệu ứng nhưng không làm nhảy layout */
+        .testimonial-item:hover .seminar-thumb {
+            transform: scale(1.05);
+            filter: brightness(1.08);
+        }
+
+        /* Tiêu đề đổi màu khi hover */
+        .testimonial-item:hover h3 a {
+            color: #009966;
+            transition: color 0.3s ease;
+        }
+
     </style>
 
     <meta charset="utf-8">
@@ -86,6 +174,7 @@
 
 <body>
 <%@ include file="navbar.jsp" %>
+
 <!-- Spinner Start -->
 <div id="spinner"
      class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
@@ -119,8 +208,8 @@
 </div>
 <!-- Hero End -->
 
-<!-- Testimonial Start (6 hội thảo mới nhất – chia 2 cột) -->
-<div class="container-fluid py-5 bg-light">
+<!-- Hội thảo-->
+<div class="container-fluid py-5 bg-light" id="testimonial-section">
     <div class="container py-5">
         <div class="row g-5">
 
@@ -134,33 +223,26 @@
 
             <%
             } else {
-
-                // Chia trái phải
-                List<Seminar> leftCol = latestSeminars.subList(0, Math.min(3, latestSeminars.size()));
-                List<Seminar> rightCol = latestSeminars.size() > 3
-                        ? latestSeminars.subList(3, Math.min(6, latestSeminars.size()))
-                        : java.util.Collections.emptyList();
             %>
 
-            <!-- CỘT TRÁI -->
-            <div class="col-lg-6">
-
-                <% for (Seminar s : leftCol) {
+            <%  // Mỗi seminar là 1 col-lg-6, Bootstrap tự chia 2 cột / nhiều hàng
+                for (Seminar s : latestSeminars) {
                     String img = (s.getImage() == null || s.getImage().isBlank())
                             ? "img/test1.png"
                             : s.getImage();
 
                     String desc = s.getDescription() != null ? s.getDescription() : "";
                     if (desc.length() > 110) desc = desc.substring(0, 110) + "...";
-                %>
+            %>
 
+            <div class="col-lg-6">
                 <div class="testimonial-item mb-5">
-                    <div class="row g-4 align-items-center">
-                        <div class="col-6">
-                            <a href="<%= ctx %>/seminar_detail_user?id=<%= s.getId() %>">
-                                <img class="img-fluid" src="<%= img %>" alt="">
-                            </a>
+                    <div class="row g-4 align-items-stretch">
 
+                    <div class="col-6">
+                            <a href="<%= ctx %>/seminar_detail_user?id=<%= s.getId() %>">
+                                <img class="img-fluid seminar-thumb" src="<%= img %>" alt="">
+                            </a>
                         </div>
                         <div class="col-6">
                             <h3>
@@ -180,450 +262,147 @@
                         </div>
                     </div>
                 </div>
-
-                <% } %>
             </div>
 
-            <!-- CỘT PHẢI -->
-            <div class="col-lg-6">
+            <% } // end for %>
 
-                <% for (Seminar s : rightCol) {
-                    String img = (s.getImage() == null || s.getImage().isBlank())
-                            ? "img/test1.png"
-                            : s.getImage();
+            <!-- PHÂN TRANG -->
+            <%
+                if (totalPages > 1) {
+            %>
+            <div class="col-12">
+                <nav aria-label="Seminar pagination">
+                    <ul class="pagination justify-content-center">
 
-                    String desc = s.getDescription() != null ? s.getDescription() : "";
-                    if (desc.length() > 110) desc = desc.substring(0, 110) + "...";
-                %>
+                        <!-- Previous -->
+                        <li class="page-item <%= (currentPage <= 1 ? "disabled" : "") %>">
+                            <a class="page-link"
+                               href="<%= ctx %>/home.jsp?page=<%= (currentPage - 1) %>#testimonial-section">Trước</a>
+                        </li>
 
-                <div class="testimonial-item mb-5">
-                    <div class="row g-4 align-items-center">
-                        <div class="col-6">
-                            <a href="<%= ctx %>/seminar_detail_user?id=<%= s.getId() %>">
-                                <img class="img-fluid" src="<%= img %>" alt="">
-                            </a>
+                        <!-- Page numbers -->
+                        <%
+                            for (int i = 1; i <= totalPages; i++) {
+                        %>
+                        <li class="page-item <%= (i == currentPage ? "active" : "") %>">
+                            <a class="page-link"
+                               href="<%= ctx %>/home.jsp?page=<%= i %>#testimonial-section"><%= i %></a>
+                        </li>
+                        <%
+                            }
+                        %>
 
-                        </div>
-                        <div class="col-6">
-                            <h3>
-                                <a href="<%= ctx %>/seminar_detail_user?id=<%= s.getId() %>"
-                                   style="text-decoration:none; color:#000;">
-                                    <%= s.getName() %>
-                                </a>
-                            </h3>
+                        <!-- Next -->
+                        <li class="page-item <%= (currentPage >= totalPages ? "disabled" : "") %>">
+                            <a class="page-link"
+                               href="<%= ctx %>/home.jsp?page=<%= (currentPage + 1) %>#testimonial-section">Sau</a>
+                        </li>
 
-                            <p><%= desc %></p>
-                            <h5 class="mb-0">
-                                <i class="bi bi-person-circle"></i>
-                                <%= (s.getSpeaker() != null && !s.getSpeaker().isBlank())
-                                        ? s.getSpeaker()
-                                        : "Đang cập nhật" %>
-                            </h5>
-                        </div>
-                    </div>
-                </div>
-
-                <% } %>
+                    </ul>
+                </nav>
             </div>
+            <%
+                } // end if totalPages > 1
+            %>
 
-            <% } %>
+            <% } // end else có dữ liệu %>
 
         </div>
     </div>
 </div>
 <!-- Testimonial End -->
 
-
-<!-- About Start -->
+<!-- Team Start -->
 <div class="container-fluid py-5">
-    <div class="container">
-        <div class="row g-5">
-            <div class="col-lg-6">
-                <div class="row">
-                    <div class="col-6 wow fadeIn" data-wow-delay="0.1s">
-                        <img class="img-fluid" src="img/about-1.jpg" alt="">
-                    </div>
-                    <div class="col-6 wow fadeIn" data-wow-delay="0.3s">
-                        <img class="img-fluid h-75" src="img/about-2.jpg" alt="">
-                        <div class="h-25 d-flex align-items-center text-center bg-primary px-4">
-                            <h4 class="text-white lh-base mb-0">Award Winning Studio Since 1990</h4>
+    <div class="container py-5">
+        <h1 class="mb-5"><span class="text-uppercase text-primary bg-light px-2">Founder</span>
+        </h1>
+        <div class="row g-4">
+
+            <div class="col-md-6 col-lg-3 wow fadeIn" data-wow-delay="0.1s">
+                <div class="team-item position-relative overflow-hidden">
+                    <img class="img-fluid w-100" src="img/a5.png" alt="">
+                    <div class="team-overlay">
+                        <small class="mb-2">Function</small>
+                        <h4 class="lh-base text-light">Huy Hoang</h4>
+                        <div class="d-flex justify-content-center">
+                            <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                            <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">
+                                <i class="fab fa-linkedin-in"></i>
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-6 wow fadeIn" data-wow-delay="0.5s">
-                <h1 class="mb-5"><span class="text-uppercase text-primary bg-light px-2">History</span> of Our
-                    Creation</h1>
-                <p class="mb-4">Tempor erat elitr rebum at clita. Diam dolor diam ipsum et tempor sit. Aliqu diam
-                    amet diam et eos labore. Clita erat ipsum et lorem et sit, sed stet no labore lorem sit. Sanctus
-                    clita duo justo et tempor eirmod magna dolore erat amet</p>
-                <p class="mb-5">Aliqu diam amet diam et eos labore. Clita erat ipsum et lorem et sit, sed stet no
-                    labore lorem sit. Sanctus clita duo justo et tempor.</p>
-                <div class="row g-3">
-                    <div class="col-sm-6">
-                        <h6 class="mb-3"><i class="fa fa-check text-primary me-2"></i>Award Winning</h6>
-                        <h6 class="mb-0"><i class="fa fa-check text-primary me-2"></i>Professional Staff</h6>
+            <div class="col-md-6 col-lg-3 wow fadeIn" data-wow-delay="0.3s">
+                <div class="team-item position-relative overflow-hidden">
+                    <img class="img-fluid w-100" src="img/a2.png" alt="">
+                    <div class="team-overlay">
+                        <small class="mb-2">Front-End</small>
+                        <h4 class="lh-base text-light">Phuoc Loi</h4>
+                        <div class="d-flex justify-content-center">
+                            <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                            <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">
+                                <i class="fab fa-linkedin-in"></i>
+                            </a>
+                        </div>
                     </div>
-                    <div class="col-sm-6">
-                        <h6 class="mb-3"><i class="fa fa-check text-primary me-2"></i>24/7 Support</h6>
-                        <h6 class="mb-0"><i class="fa fa-check text-primary me-2"></i>Fair Prices</h6>
-                    </div>
-                </div>
-                <div class="d-flex align-items-center mt-5">
-                    <a class="btn btn-primary px-4 me-2" href="#!">Read More</a>
-                    <a class="btn btn-outline-primary btn-square border-2 me-2" href="#!"><i
-                            class="fab fa-facebook-f"></i></a>
-                    <a class="btn btn-outline-primary btn-square border-2 me-2" href="#!"><i
-                            class="fab fa-twitter"></i></a>
-                    <a class="btn btn-outline-primary btn-square border-2 me-2" href="#!"><i
-                            class="fab fa-instagram"></i></a>
-                    <a class="btn btn-outline-primary btn-square border-2" href="#!"><i
-                            class="fab fa-linkedin-in"></i></a>
                 </div>
             </div>
+            <div class="col-md-6 col-lg-3 wow fadeIn" data-wow-delay="0.5s">
+                <div class="team-item position-relative overflow-hidden">
+                    <img class="img-fluid w-100" src="img/a3.png" alt="">
+                    <div class="team-overlay">
+                        <small class="mb-2">Back-End</small>
+                        <h4 class="lh-base text-light">Duc Quy</h4>
+                        <div class="d-flex justify-content-center">
+                            <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                            <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">
+                                <i class="fab fa-linkedin-in"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
-<!-- About End -->
+<!-- Team End -->
 
 
-<%--    <!-- Feature Start -->--%>
-<%--    <div class="container-fluid py-5">--%>
-<%--        <div class="container">--%>
-<%--            <div class="text-center wow fadeIn" data-wow-delay="0.1s">--%>
-<%--                <h1 class="mb-5">Why People <span class="text-uppercase text-primary bg-light px-2">Choose Us</span>--%>
-<%--                </h1>--%>
-<%--            </div>--%>
-<%--            <div class="row g-5 align-items-center text-center">--%>
-<%--                <div class="col-md-6 col-lg-4 wow fadeIn" data-wow-delay="0.1s">--%>
-<%--                    <i class="fa fa-calendar-alt fa-5x text-primary mb-4"></i>--%>
-<%--                    <h4>25+ Years Experience</h4>--%>
-<%--                    <p class="mb-0">Clita erat ipsum et lorem et sit, sed stet no labore lorem sit. Sanctus clita duo--%>
-<%--                        justo et tempor eirmod magna dolore erat amet</p>--%>
-<%--                </div>--%>
-<%--                <div class="col-md-6 col-lg-4 wow fadeIn" data-wow-delay="0.3s">--%>
-<%--                    <i class="fa fa-tasks fa-5x text-primary mb-4"></i>--%>
-<%--                    <h4>Best Interior Design</h4>--%>
-<%--                    <p class="mb-0">Clita erat ipsum et lorem et sit, sed stet no labore lorem sit. Sanctus clita duo--%>
-<%--                        justo et tempor eirmod magna dolore erat amet</p>--%>
-<%--                </div>--%>
-<%--                <div class="col-md-6 col-lg-4 wow fadeIn" data-wow-delay="0.5s">--%>
-<%--                    <i class="fa fa-pencil-ruler fa-5x text-primary mb-4"></i>--%>
-<%--                    <h4>Innovative Architects</h4>--%>
-<%--                    <p class="mb-0">Clita erat ipsum et lorem et sit, sed stet no labore lorem sit. Sanctus clita duo--%>
-<%--                        justo et tempor eirmod magna dolore erat amet</p>--%>
-<%--                </div>--%>
-<%--                <div class="col-md-6 col-lg-4 wow fadeIn" data-wow-delay="0.1s">--%>
-<%--                    <i class="fa fa-user fa-5x text-primary mb-4"></i>--%>
-<%--                    <h4>Customer Satisfaction</h4>--%>
-<%--                    <p class="mb-0">Clita erat ipsum et lorem et sit, sed stet no labore lorem sit. Sanctus clita duo--%>
-<%--                        justo et tempor eirmod magna dolore erat amet</p>--%>
-<%--                </div>--%>
-<%--                <div class="col-md-6 col-lg-4 wow fadeIn" data-wow-delay="0.3s">--%>
-<%--                    <i class="fa fa-hand-holding-usd fa-5x text-primary mb-4"></i>--%>
-<%--                    <h4>Budget Friendly</h4>--%>
-<%--                    <p class="mb-0">Clita erat ipsum et lorem et sit, sed stet no labore lorem sit. Sanctus clita duo--%>
-<%--                        justo et tempor eirmod magna dolore erat amet</p>--%>
-<%--                </div>--%>
-<%--                <div class="col-md-6 col-lg-4 wow fadeIn" data-wow-delay="0.5s">--%>
-<%--                    <i class="fa fa-check fa-5x text-primary mb-4"></i>--%>
-<%--                    <h4>Sustainable Material</h4>--%>
-<%--                    <p class="mb-0">Clita erat ipsum et lorem et sit, sed stet no labore lorem sit. Sanctus clita duo--%>
-<%--                        justo et tempor eirmod magna dolore erat amet</p>--%>
-<%--                </div>--%>
-<%--            </div>--%>
-<%--        </div>--%>
-<%--    </div>--%>
-<%--    <!-- Feature End -->--%>
-
-
-<%--    <!-- Project Start -->--%>
-<%--    <div class="container-fluid mt-5">--%>
-<%--        <div class="container mt-5">--%>
-<%--            <div class="row g-0">--%>
-<%--                <div class="col-lg-5 wow fadeIn" data-wow-delay="0.1s">--%>
-<%--                    <div class="d-flex flex-column justify-content-center bg-primary h-100 p-5">--%>
-<%--                        <h1 class="text-white mb-5">Our Latest <span--%>
-<%--                                class="text-uppercase text-primary bg-light px-2">Projects</span></h1>--%>
-<%--                        <h4 class="text-white mb-0"><span class="display-1">6</span> of our latest projects</h4>--%>
-<%--                    </div>--%>
-<%--                </div>--%>
-<%--                <div class="col-lg-7">--%>
-<%--                    <div class="row g-0">--%>
-<%--                        <div class="col-md-6 col-lg-4 wow fadeIn" data-wow-delay="0.2s">--%>
-<%--                            <div class="project-item position-relative overflow-hidden">--%>
-<%--                                <img class="img-fluid w-100" src="img/project-1.jpg" alt="">--%>
-<%--                                <a class="project-overlay text-decoration-none" href="#!">--%>
-<%--                                    <h4 class="text-white">Kitchen</h4>--%>
-<%--                                    <small class="text-white">72 Projects</small>--%>
-<%--                                </a>--%>
-<%--                            </div>--%>
-<%--                        </div>--%>
-<%--                        <div class="col-md-6 col-lg-4 wow fadeIn" data-wow-delay="0.3s">--%>
-<%--                            <div class="project-item position-relative overflow-hidden">--%>
-<%--                                <img class="img-fluid w-100" src="img/project-2.jpg" alt="">--%>
-<%--                                <a class="project-overlay text-decoration-none" href="#!">--%>
-<%--                                    <h4 class="text-white">Bathroom</h4>--%>
-<%--                                    <small class="text-white">67 Projects</small>--%>
-<%--                                </a>--%>
-<%--                            </div>--%>
-<%--                        </div>--%>
-<%--                        <div class="col-md-6 col-lg-4 wow fadeIn" data-wow-delay="0.4s">--%>
-<%--                            <div class="project-item position-relative overflow-hidden">--%>
-<%--                                <img class="img-fluid w-100" src="img/project-3.jpg" alt="">--%>
-<%--                                <a class="project-overlay text-decoration-none" href="#!">--%>
-<%--                                    <h4 class="text-white">Bedroom</h4>--%>
-<%--                                    <small class="text-white">53 Projects</small>--%>
-<%--                                </a>--%>
-<%--                            </div>--%>
-<%--                        </div>--%>
-<%--                        <div class="col-md-6 col-lg-4 wow fadeIn" data-wow-delay="0.5s">--%>
-<%--                            <div class="project-item position-relative overflow-hidden">--%>
-<%--                                <img class="img-fluid w-100" src="img/project-4.jpg" alt="">--%>
-<%--                                <a class="project-overlay text-decoration-none" href="#!">--%>
-<%--                                    <h4 class="text-white">Living Room</h4>--%>
-<%--                                    <small class="text-white">33 Projects</small>--%>
-<%--                                </a>--%>
-<%--                            </div>--%>
-<%--                        </div>--%>
-<%--                        <div class="col-md-6 col-lg-4 wow fadeIn" data-wow-delay="0.6s">--%>
-<%--                            <div class="project-item position-relative overflow-hidden">--%>
-<%--                                <img class="img-fluid w-100" src="img/project-5.jpg" alt="">--%>
-<%--                                <a class="project-overlay text-decoration-none" href="#!">--%>
-<%--                                    <h4 class="text-white">Furniture</h4>--%>
-<%--                                    <small class="text-white">87 Projects</small>--%>
-<%--                                </a>--%>
-<%--                            </div>--%>
-<%--                        </div>--%>
-<%--                        <div class="col-md-6 col-lg-4 wow fadeIn" data-wow-delay="0.7s">--%>
-<%--                            <div class="project-item position-relative overflow-hidden">--%>
-<%--                                <img class="img-fluid w-100" src="img/project-6.jpg" alt="">--%>
-<%--                                <a class="project-overlay text-decoration-none" href="#!">--%>
-<%--                                    <h4 class="text-white">Rennovation</h4>--%>
-<%--                                    <small class="text-white">69 Projects</small>--%>
-<%--                                </a>--%>
-<%--                            </div>--%>
-<%--                        </div>--%>
-<%--                    </div>--%>
-<%--                </div>--%>
-<%--            </div>--%>
-<%--        </div>--%>
-<%--    </div>--%>
-<%--    <!-- Project End -->--%>
-
-
-<%--    <!-- Service Start -->--%>
-<%--    <div class="container-fluid py-5">--%>
-<%--        <div class="container py-5">--%>
-<%--            <div class="row g-5 align-items-center">--%>
-<%--                <div class="col-lg-5 wow fadeIn" data-wow-delay="0.1s">--%>
-<%--                    <h1 class="mb-5">Our Creative <span--%>
-<%--                            class="text-uppercase text-primary bg-light px-2">Services</span></h1>--%>
-<%--                    <p>Aliqu diam--%>
-<%--                        amet diam et eos labore. Clita erat ipsum et lorem et sit, sed stet no labore lorem sit. Sanctus--%>
-<%--                        clita duo justo et tempor eirmod magna dolore erat amet</p>--%>
-<%--                    <p class="mb-5">Tempor erat elitr rebum at clita. Diam dolor diam ipsum et tempor sit. Aliqu diam--%>
-<%--                        amet diam et eos labore. Clita erat ipsum et lorem et sit, sed stet no labore lorem sit. Sanctus--%>
-<%--                        clita duo justo et tempor eirmod magna dolore erat amet</p>--%>
-<%--                    <div class="d-flex align-items-center bg-light">--%>
-<%--                        <div class="btn-square flex-shrink-0 bg-primary" style="width: 100px; height: 100px;">--%>
-<%--                            <i class="fa fa-phone fa-2x text-white"></i>--%>
-<%--                        </div>--%>
-<%--                        <div class="px-3">--%>
-<%--                            <h3>+0123456789</h3>--%>
-<%--                            <span>Call us direct 24/7 for get a free consultation</span>--%>
-<%--                        </div>--%>
-<%--                    </div>--%>
-<%--                </div>--%>
-<%--                <div class="col-lg-7">--%>
-<%--                    <div class="row g-0">--%>
-<%--                        <div class="col-md-6 wow fadeIn" data-wow-delay="0.2s">--%>
-<%--                            <div class="service-item h-100 d-flex flex-column justify-content-center bg-primary">--%>
-<%--                                <a href="#!" class="service-img position-relative mb-4">--%>
-<%--                                    <img class="img-fluid w-100" src="img/service-1.jpg" alt="">--%>
-<%--                                    <h3>Interior Design</h3>--%>
-<%--                                </a>--%>
-<%--                                <p class="mb-0">Erat ipsum justo amet duo et elitr dolor, est duo duo eos lorem sed diam--%>
-<%--                                    stet diam sed stet lorem.</p>--%>
-<%--                            </div>--%>
-<%--                        </div>--%>
-<%--                        <div class="col-md-6 wow fadeIn" data-wow-delay="0.4s">--%>
-<%--                            <div class="service-item h-100 d-flex flex-column justify-content-center bg-light">--%>
-<%--                                <a href="#!" class="service-img position-relative mb-4">--%>
-<%--                                    <img class="img-fluid w-100" src="img/service-2.jpg" alt="">--%>
-<%--                                    <h3>Implement</h3>--%>
-<%--                                </a>--%>
-<%--                                <p class="mb-0">Erat ipsum justo amet duo et elitr dolor, est duo duo eos lorem sed diam--%>
-<%--                                    stet diam sed stet lorem.</p>--%>
-<%--                            </div>--%>
-<%--                        </div>--%>
-<%--                        <div class="col-md-6 wow fadeIn" data-wow-delay="0.6s">--%>
-<%--                            <div class="service-item h-100 d-flex flex-column justify-content-center bg-light">--%>
-<%--                                <a href="#!" class="service-img position-relative mb-4">--%>
-<%--                                    <img class="img-fluid w-100" src="img/service-3.jpg" alt="">--%>
-<%--                                    <h3>Renovation</h3>--%>
-<%--                                </a>--%>
-<%--                                <p class="mb-0">Erat ipsum justo amet duo et elitr dolor, est duo duo eos lorem sed diam--%>
-<%--                                    stet diam sed stet lorem.</p>--%>
-<%--                            </div>--%>
-<%--                        </div>--%>
-<%--                        <div class="col-md-6 wow fadeIn" data-wow-delay="0.8s">--%>
-<%--                            <div class="service-item h-100 d-flex flex-column justify-content-center bg-primary">--%>
-<%--                                <a href="#!" class="service-img position-relative mb-4">--%>
-<%--                                    <img class="img-fluid w-100" src="img/service-4.jpg" alt="">--%>
-<%--                                    <h3>Commercial</h3>--%>
-<%--                                </a>--%>
-<%--                                <p class="mb-0">Erat ipsum justo amet duo et elitr dolor, est duo duo eos lorem sed diam--%>
-<%--                                    stet diam sed stet lorem.</p>--%>
-<%--                            </div>--%>
-<%--                        </div>--%>
-<%--                    </div>--%>
-<%--                </div>--%>
-<%--            </div>--%>
-<%--        </div>--%>
-<%--    </div>--%>
-<%--    <!-- Service End -->--%>
-
-
-<%--    <!-- Team Start -->--%>
-<%--    <div class="container-fluid bg-light py-5">--%>
-<%--        <div class="container py-5">--%>
-<%--            <h1 class="mb-5">Our Professional <span class="text-uppercase text-primary bg-light px-2">Designers</span>--%>
-<%--            </h1>--%>
-<%--            <div class="row g-4">--%>
-<%--                <div class="col-md-6 col-lg-3 wow fadeIn" data-wow-delay="0.1s">--%>
-<%--                    <div class="team-item position-relative overflow-hidden">--%>
-<%--                        <img class="img-fluid w-100" src="img/team-1.jpg" alt="">--%>
-<%--                        <div class="team-overlay">--%>
-<%--                            <small class="mb-2">Architect</small>--%>
-<%--                            <h4 class="lh-base text-light">Boris Johnson</h4>--%>
-<%--                            <div class="d-flex justify-content-center">--%>
-<%--                                <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">--%>
-<%--                                    <i class="fab fa-facebook-f"></i>--%>
-<%--                                </a>--%>
-<%--                                <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">--%>
-<%--                                    <i class="fab fa-twitter"></i>--%>
-<%--                                </a>--%>
-<%--                                <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">--%>
-<%--                                    <i class="fab fa-instagram"></i>--%>
-<%--                                </a>--%>
-<%--                                <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">--%>
-<%--                                    <i class="fab fa-linkedin-in"></i>--%>
-<%--                                </a>--%>
-<%--                            </div>--%>
-<%--                        </div>--%>
-<%--                    </div>--%>
-<%--                </div>--%>
-<%--                <div class="col-md-6 col-lg-3 wow fadeIn" data-wow-delay="0.3s">--%>
-<%--                    <div class="team-item position-relative overflow-hidden">--%>
-<%--                        <img class="img-fluid w-100" src="img/team-2.jpg" alt="">--%>
-<%--                        <div class="team-overlay">--%>
-<%--                            <small class="mb-2">Architect</small>--%>
-<%--                            <h4 class="lh-base text-light">Donald Pakura</h4>--%>
-<%--                            <div class="d-flex justify-content-center">--%>
-<%--                                <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">--%>
-<%--                                    <i class="fab fa-facebook-f"></i>--%>
-<%--                                </a>--%>
-<%--                                <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">--%>
-<%--                                    <i class="fab fa-twitter"></i>--%>
-<%--                                </a>--%>
-<%--                                <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">--%>
-<%--                                    <i class="fab fa-instagram"></i>--%>
-<%--                                </a>--%>
-<%--                                <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">--%>
-<%--                                    <i class="fab fa-linkedin-in"></i>--%>
-<%--                                </a>--%>
-<%--                            </div>--%>
-<%--                        </div>--%>
-<%--                    </div>--%>
-<%--                </div>--%>
-<%--                <div class="col-md-6 col-lg-3 wow fadeIn" data-wow-delay="0.5s">--%>
-<%--                    <div class="team-item position-relative overflow-hidden">--%>
-<%--                        <img class="img-fluid w-100" src="img/team-3.jpg" alt="">--%>
-<%--                        <div class="team-overlay">--%>
-<%--                            <small class="mb-2">Architect</small>--%>
-<%--                            <h4 class="lh-base text-light">Bradley Gordon</h4>--%>
-<%--                            <div class="d-flex justify-content-center">--%>
-<%--                                <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">--%>
-<%--                                    <i class="fab fa-facebook-f"></i>--%>
-<%--                                </a>--%>
-<%--                                <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">--%>
-<%--                                    <i class="fab fa-twitter"></i>--%>
-<%--                                </a>--%>
-<%--                                <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">--%>
-<%--                                    <i class="fab fa-instagram"></i>--%>
-<%--                                </a>--%>
-<%--                                <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">--%>
-<%--                                    <i class="fab fa-linkedin-in"></i>--%>
-<%--                                </a>--%>
-<%--                            </div>--%>
-<%--                        </div>--%>
-<%--                    </div>--%>
-<%--                </div>--%>
-<%--                <div class="col-md-6 col-lg-3 wow fadeIn" data-wow-delay="0.7s">--%>
-<%--                    <div class="team-item position-relative overflow-hidden">--%>
-<%--                        <img class="img-fluid w-100" src="img/team-4.jpg" alt="">--%>
-<%--                        <div class="team-overlay">--%>
-<%--                            <small class="mb-2">Architect</small>--%>
-<%--                            <h4 class="lh-base text-light">Alexander Bell</h4>--%>
-<%--                            <div class="d-flex justify-content-center">--%>
-<%--                                <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">--%>
-<%--                                    <i class="fab fa-facebook-f"></i>--%>
-<%--                                </a>--%>
-<%--                                <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">--%>
-<%--                                    <i class="fab fa-twitter"></i>--%>
-<%--                                </a>--%>
-<%--                                <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">--%>
-<%--                                    <i class="fab fa-instagram"></i>--%>
-<%--                                </a>--%>
-<%--                                <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">--%>
-<%--                                    <i class="fab fa-linkedin-in"></i>--%>
-<%--                                </a>--%>
-<%--                            </div>--%>
-<%--                        </div>--%>
-<%--                    </div>--%>
-<%--                </div>--%>
-<%--            </div>--%>
-<%--        </div>--%>
-<%--    </div>--%>
-<%--    <!-- Team End -->--%>
-
-
-
-<!-- Newsletter Start -->
-<div class="container-fluid bg-primary newsletter p-0">
-    <div class="container p-0">
-        <div class="row g-0 align-items-center">
-            <div class="col-md-5 ps-lg-0 text-start wow fadeIn" data-wow-delay="0.2s">
-                <img class="img-fluid w-100" src="img/newsletter.jpg" alt="">
-            </div>
-            <div class="col-md-7 py-5 newsletter-text wow fadeIn" data-wow-delay="0.5s">
-                <div class="p-5">
-                    <h1 class="mb-5">Subscribe the <span
-                            class="text-uppercase text-primary bg-white px-2">Newsletter</span></h1>
-                    <div class="position-relative w-100 mb-2">
-                        <input class="form-control border-0 w-100 ps-4 pe-5" type="text"
-                               placeholder="Enter Your Email" style="height: 60px;">
-                        <button type="button" class="btn shadow-none position-absolute top-0 end-0 mt-2 me-2"><i
-                                class="fa fa-paper-plane text-primary fs-4"></i></button>
-                    </div>
-                    <p class="mb-0">Diam sed sed dolor stet amet eirmod</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- Newsletter End -->
 
 
 <!-- Footer Start -->
 <%@ include file="footer.jsp" %>
 <!-- Footer End -->
 
-
 <!-- Back to Top -->
 <a href="#!" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
-
 
 <!-- JavaScript Libraries -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
@@ -638,4 +417,3 @@
 </body>
 
 </html>
-

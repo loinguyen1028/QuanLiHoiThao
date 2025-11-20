@@ -48,7 +48,7 @@ public class UploadImageServlet extends HttpServlet {
         String safeName = UUID.randomUUID().toString().replace("-", "") + ext.toLowerCase();
 
         // Lưu ngoài webapp (đừng để trong war)
-        Path root = Paths.get(System.getProperty("uploads.dir", "D:/uploads"), "ck4");
+        Path root = Paths.get(System.getProperty("img.dir", "D:/img"), "ck4");
         Files.createDirectories(root);
         try (InputStream in = filePart.getInputStream()) {
             Files.copy(in, root.resolve(safeName), StandardCopyOption.REPLACE_EXISTING);

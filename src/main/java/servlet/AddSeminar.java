@@ -61,7 +61,7 @@ public class AddSeminar extends HttpServlet {
         LocalDateTime endDate = LocalDateTime.parse(endDateString);
         String startDateString = request.getParameter("startDate");
         LocalDateTime startDate = LocalDateTime.parse(startDateString);
-
+        String status = "Đang mở đăng kí";
         String description = request.getParameter("description");
 
         Part imagePart = request.getPart("image");
@@ -72,9 +72,8 @@ public class AddSeminar extends HttpServlet {
             String appPath = "D:/";
             imagePath = FileUploadUtil.uploadImageReturnPath(imagePart, "banner", appPath);
         }
-//        System.out.println(imagePath);
         Seminar seminar = new Seminar(name, description, startDate, endDate,
-                location, speaker, category, maxAttendance, imagePath);
+                location, speaker, category, maxAttendance, imagePath, status);
 
         seminarService.create(seminar);
 

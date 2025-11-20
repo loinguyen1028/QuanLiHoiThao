@@ -18,7 +18,10 @@ import utils.DataSourceUtil;
 
 import javax.sql.DataSource;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.UUID;
 
 @WebServlet("/RegisterServlet")
@@ -48,13 +51,11 @@ public class RegisterServlet extends HttpServlet {
                 Register r = registerRepository.findByEmailAndCode(email, code);
 
                 if (r != null) {
-                    // 1. Check hạn sửa khi vào trang
-                    if (isExpired(r.getSeminarId())) {
+                    // Check hạn sửa (dùng hàm isExpiredForEdit riêng ở dưới)
+                    if (isExpiredForEdit(r.getSeminarId())) {
                         req.setAttribute("msg", "❌ Đã quá hạn chỉnh sửa thông tin! Sự kiện đã hoặc đang diễn ra.");
                     } else {
-                        // Còn hạn -> Cho phép vào trang sửa
                         req.setAttribute("register", r);
-                        // Lấy tên hội thảo để hiển thị
                         Seminar s = seminarService.findById(r.getSeminarId());
                         if (s != null) r.setEventName(s.getName());
 
@@ -87,15 +88,12 @@ public class RegisterServlet extends HttpServlet {
                 return;
             }
 
-            // 🔥 QUAN TRỌNG: Check hạn sửa lần nữa trước khi Lưu (Bảo mật)
-            if (isExpired(current.getSeminarId())) {
+            if (isExpiredForEdit(current.getSeminarId())) {
                 request.setAttribute("msg", "❌ Lỗi: Đã quá hạn chỉnh sửa! Thay đổi không được lưu.");
-                // Trả về trang xác thực
                 request.getRequestDispatcher("/verify-edit.jsp").forward(request, response);
                 return;
             }
 
-            // Cập nhật thông tin
             current.setName(request.getParameter("fullname"));
             current.setPhone(request.getParameter("phone"));
             current.setUserType(request.getParameter("type"));
@@ -122,12 +120,48 @@ public class RegisterServlet extends HttpServlet {
         if (seminarId > 0) seminar = seminarService.findById(seminarId);
         request.setAttribute("seminar", seminar);
 
+        // ============================================================
+        // 🛡️ BẢO MẬT CẤP 2: CHẶN LƯU DB NẾU HẾT HẠN (QUAN TRỌNG)
+        // ============================================================
+        if (seminar != null) {
+            Date now = new Date();
+            Date closeTime = seminar.getRegistrationDeadline();
+
+            // Logic tự động đóng trước 1 ngày nếu không set deadline
+            if (closeTime == null) {
+                if (seminar.getStart_date() != null) {
+                    LocalDateTime defaultDeadline = seminar.getStart_date().minusDays(1);
+                    closeTime = Timestamp.valueOf(defaultDeadline);
+                } else {
+                    closeTime = new Date();
+                }
+            }
+
+            // Kiểm tra ngày mở
+            Date openTime = seminar.getRegistrationOpen();
+            if (openTime != null && now.before(openTime)) {
+                request.setAttribute("errorMessage", "❌ Chưa đến thời gian đăng ký.");
+                request.getRequestDispatcher("/register-user.jsp").forward(request, response);
+                return;
+            }
+
+            // Kiểm tra ngày đóng
+            if (now.after(closeTime)) {
+                request.setAttribute("errorMessage", "❌ Đã hết hạn đăng ký. Không thể thực hiện thao tác này.");
+                request.getRequestDispatcher("/register-user.jsp").forward(request, response);
+                return;
+            }
+        }
+        // ============================================================
+
+
         if (seminarId <= 0 || fullname == null || fullname.isBlank() || email == null || email.isBlank()) {
             request.setAttribute("errorMessage", "Dữ liệu không hợp lệ.");
             request.getRequestDispatcher("/register-user.jsp").forward(request, response);
             return;
         }
 
+        // ... (Phần tạo mã và gửi email giữ nguyên như cũ) ...
         String registrationCode = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
         String checkInId = "EVT-" + (100 + new java.util.Random().nextInt(899));
 
@@ -146,13 +180,11 @@ public class RegisterServlet extends HttpServlet {
                 String eventName = (seminar != null) ? seminar.getName() : "Hội thảo";
                 String timeStr = (seminar != null && seminar.getStart_date() != null) ? seminar.getStart_date().toString().replace("T", " - ") : "Đang cập nhật";
                 String locationStr = (seminar != null) ? seminar.getLocation() : "HCMUTE";
-
                 byte[] qrBytes = QRCodeGenerator.generateQRCodeImage(checkInId, 250, 250);
 
-                // Link xác thực (để người dùng tự nhập mã)
-                String linkSua = "http://localhost:8080/demofinal4_war_exploded/RegisterServlet?action=verifyUser";
+                // CẬP NHẬT URL CHO ĐÚNG VỚI PROJECT CỦA BẠN
+                String linkSua = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + "/RegisterServlet?action=verifyUser";
 
-                // Nội dung Email HTML
                 StringBuilder sb = new StringBuilder();
                 sb.append("<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;'>");
                 sb.append("<div style='background-color: #4e73df; padding: 20px; text-align: center; color: white;'><h2 style='margin:0'>XÁC NHẬN ĐĂNG KÝ</h2></div>");
@@ -189,17 +221,15 @@ public class RegisterServlet extends HttpServlet {
         request.getRequestDispatcher("/register-user.jsp").forward(request, response);
     }
 
-    // --- HÀM PHỤ: KIỂM TRA HẾT HẠN ---
-    private boolean isExpired(int seminarId) {
+    // Hàm check hạn cho việc SỬA thông tin (Cho phép sửa đến ngày diễn ra)
+    private boolean isExpiredForEdit(int seminarId) {
         Seminar seminar = seminarService.findById(seminarId);
         if (seminar == null || seminar.getStart_date() == null) {
-            return false; // Không có ngày -> Không bao giờ hết hạn
+            return false;
         }
-
         LocalDate today = LocalDate.now();
         LocalDate eventDate = seminar.getStart_date().toLocalDate();
-
-        // Nếu hôm nay > ngày sự kiện -> Hết hạn
+        // Nếu hôm nay > ngày sự kiện -> Không cho sửa nữa
         return today.isAfter(eventDate);
     }
 }

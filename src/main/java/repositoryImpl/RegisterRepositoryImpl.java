@@ -5,7 +5,7 @@ import dto.GuestStatDTO;
 import model.PageRequest;
 import model.Register;
 import repository.RegisterRepository;
-import utils.DBConnect; // Dùng DBConnect
+import utils.DataSourceUtil; // Dùng DBConnect
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -32,8 +32,8 @@ public class RegisterRepositoryImpl implements RegisterRepository {
         String sql = "SELECT r.*, s.name as seminar_name " +
                 "FROM registrations r LEFT JOIN seminar s ON r.seminar_id = s.id " +
                 "WHERE r.check_in_id = ?";
-
-        try (Connection conn = DBConnect.getConnection();
+        
+        try (Connection conn = DataSourceUtil.getDataSource().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, checkInId);
@@ -53,7 +53,7 @@ public class RegisterRepositoryImpl implements RegisterRepository {
         if (checkInId != null) checkInId = checkInId.trim();
 
         String sql = "UPDATE registrations SET checkin_time = NOW() WHERE check_in_id = ?";
-        try (Connection conn = DBConnect.getConnection();
+        try (Connection conn = DataSourceUtil.getDataSource().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, checkInId);
             return ps.executeUpdate() > 0;
@@ -74,7 +74,7 @@ public class RegisterRepositoryImpl implements RegisterRepository {
         String sql = "INSERT INTO registrations (seminar_id, registration_code, check_in_id, name, email, phone, user_type) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = DBConnect.getConnection();
+        try (Connection conn = DataSourceUtil.getDataSource().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
 
             ps.setInt(1, entity.getSeminarId());
@@ -98,7 +98,7 @@ public class RegisterRepositoryImpl implements RegisterRepository {
 
     private boolean isEmailExists(String email, int seminarId) {
         String sql = "SELECT id FROM registrations WHERE email = ? AND seminar_id = ?";
-        try (Connection conn = DBConnect.getConnection();
+        try (Connection conn = DataSourceUtil.getDataSource().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, email);
             ps.setInt(2, seminarId);
@@ -109,7 +109,7 @@ public class RegisterRepositoryImpl implements RegisterRepository {
     @Override
     public boolean update(Register entity) {
         String sql = "UPDATE registrations SET name=?, email=?, phone=?, user_type=?, is_vip=?, seminar_id=? WHERE id=?";
-        try (Connection conn = DBConnect.getConnection();
+        try (Connection conn = DataSourceUtil.getDataSource().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, entity.getName());
             ps.setString(2, entity.getEmail());
@@ -125,7 +125,7 @@ public class RegisterRepositoryImpl implements RegisterRepository {
     @Override
     public boolean delete(int id) {
         String sql = "DELETE FROM registrations WHERE id=?";
-        try (Connection conn = DBConnect.getConnection();
+        try (Connection conn = DataSourceUtil.getDataSource().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             return ps.executeUpdate() > 0;
@@ -135,7 +135,7 @@ public class RegisterRepositoryImpl implements RegisterRepository {
     @Override
     public Register findById(int id) {
         String sql = "SELECT r.*, s.name as seminar_name FROM registrations r JOIN seminar s ON r.seminar_id = s.id WHERE r.id=?";
-        try (Connection conn = DBConnect.getConnection();
+        try (Connection conn = DataSourceUtil.getDataSource().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
@@ -148,7 +148,7 @@ public class RegisterRepositoryImpl implements RegisterRepository {
     public List<Register> findBySeminarId(int seminarId) {
         List<Register> list = new ArrayList<>();
         String sql = "SELECT r.*, s.name as seminar_name FROM registrations r JOIN seminar s ON r.seminar_id = s.id WHERE seminar_id=? ORDER BY id DESC";
-        try (Connection conn = DBConnect.getConnection();
+        try (Connection conn = DataSourceUtil.getDataSource().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, seminarId);
             ResultSet rs = ps.executeQuery();
@@ -160,7 +160,7 @@ public class RegisterRepositoryImpl implements RegisterRepository {
     @Override
     public Register findByEmailAndCode(String email, String code) {
         String sql = "SELECT r.*, s.name as seminar_name FROM registrations r JOIN seminar s ON r.seminar_id = s.id WHERE email=? AND registration_code=?";
-        try (Connection conn = DBConnect.getConnection();
+        try (Connection conn = DataSourceUtil.getDataSource().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, email); ps.setString(2, code);
             ResultSet rs = ps.executeQuery();
@@ -172,7 +172,7 @@ public class RegisterRepositoryImpl implements RegisterRepository {
     @Override
     public boolean toggleVip(int id) {
         String sql = "UPDATE registrations SET is_vip = NOT is_vip WHERE id = ?";
-        try (Connection conn = DBConnect.getConnection();
+        try (Connection conn = DataSourceUtil.getDataSource().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             return ps.executeUpdate() > 0;
@@ -183,7 +183,7 @@ public class RegisterRepositoryImpl implements RegisterRepository {
     public List<ChartDataDTO> getRegistrationStatsByDate() {
         List<ChartDataDTO> list = new ArrayList<>();
         String sql = "SELECT register_date, COUNT(*) as count FROM registrations GROUP BY register_date ORDER BY register_date ASC LIMIT 10";
-        try (Connection conn = DBConnect.getConnection();
+        try (Connection conn = DataSourceUtil.getDataSource().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
@@ -198,7 +198,7 @@ public class RegisterRepositoryImpl implements RegisterRepository {
     public List<GuestStatDTO> getGuestStatistics() {
         List<GuestStatDTO> list = new ArrayList<>();
         String sql = "SELECT user_type, COUNT(*) as total_reg, COUNT(CASE WHEN checkin_time IS NOT NULL THEN 1 END) as total_checkin FROM registrations GROUP BY user_type";
-        try (Connection conn = DBConnect.getConnection();
+        try (Connection conn = DataSourceUtil.getDataSource().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
@@ -235,7 +235,7 @@ public class RegisterRepositoryImpl implements RegisterRepository {
                 "WHERE s.category_id = ? " +
                 "ORDER BY r.register_date DESC";
 
-        try (Connection conn = utils.DBConnect.getConnection();
+        try (Connection conn = DataSourceUtil.getDataSource().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, categoryId);
