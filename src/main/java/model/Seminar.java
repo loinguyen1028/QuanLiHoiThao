@@ -1,13 +1,17 @@
 package model;
 
+import java.sql.Timestamp; // ✅ Quan trọng: Phải dùng java.sql.Timestamp
 import java.time.LocalDateTime;
 
 public class Seminar {
     private int id;
     private String name;
     private String description;
+
+    // Dùng LocalDateTime cho ngày diễn ra (giữ nguyên như code cũ của bạn)
     private LocalDateTime start_date;
     private LocalDateTime end_date;
+
     private String location;
     private String speaker;
     private int categoryId;
@@ -15,22 +19,22 @@ public class Seminar {
     private String status;
     private String image;
 
+    // ✅ Hai trường mới dùng Timestamp để tương thích với Database và logic JSP
+    private Timestamp registrationOpen;
+    private Timestamp registrationDeadline;
+
+    // ==========================
+    // 1. CONSTRUCTORS
+    // ==========================
+
+    // Constructor rỗng (Bắt buộc phải có)
     public Seminar() {
     }
 
-    public Seminar(String name, String description, LocalDateTime start_date, LocalDateTime end_date, String location, String speaker, int categoryId, int maxAttendance, String image) {
-        this.name = name;
-        this.description = description;
-        this.start_date = start_date;
-        this.end_date = end_date;
-        this.location = location;
-        this.speaker = speaker;
-        this.categoryId = categoryId;
-        this.maxAttendance = maxAttendance;
-        this.image = image;
-    }
-
-    public Seminar(int id, String name, String description, LocalDateTime start_date, LocalDateTime end_date, String location, String speaker, int categoryId, int maxAttendance, String image) {
+    // Constructor đầy đủ (Dùng khi lấy dữ liệu từ DB lên)
+    public Seminar(int id, String name, String description, LocalDateTime start_date, LocalDateTime end_date,
+                   String location, String speaker, int categoryId, int maxAttendance, String image,
+                   String status, Timestamp registrationOpen, Timestamp registrationDeadline) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -41,7 +45,28 @@ public class Seminar {
         this.categoryId = categoryId;
         this.maxAttendance = maxAttendance;
         this.image = image;
+        this.status = status;
+        this.registrationOpen = registrationOpen;
+        this.registrationDeadline = registrationDeadline;
     }
+
+    // Constructor ngắn gọn (Dùng khi tạo mới, chưa có ID)
+    public Seminar(String name, String description, LocalDateTime start_date, LocalDateTime end_date,
+                   String location, String speaker, int categoryId, int maxAttendance, String image) {
+        this.name = name;
+        this.description = description;
+        this.start_date = start_date;
+        this.end_date = end_date;
+        this.location = location;
+        this.speaker = speaker;
+        this.categoryId = categoryId;
+        this.maxAttendance = maxAttendance;
+        this.image = image;
+    }
+
+    // ==========================
+    // 2. GETTER & SETTER
+    // ==========================
 
     public int getId() {
         return id;
@@ -129,5 +154,29 @@ public class Seminar {
 
     public void setImage(String image) {
         this.image = image;
+    }
+
+    // --- Getter & Setter cho 2 trường mới (Kiểu Timestamp) ---
+
+    public Timestamp getRegistrationOpen() {
+        return registrationOpen;
+    }
+
+    public void setRegistrationOpen(Timestamp registrationOpen) {
+        this.registrationOpen = registrationOpen;
+    }
+
+    public Timestamp getRegistrationDeadline() {
+        return registrationDeadline;
+    }
+
+    public void setRegistrationDeadline(Timestamp registrationDeadline) {
+        this.registrationDeadline = registrationDeadline;
+    }
+
+    // (Tùy chọn) Hàm toString để debug
+    @Override
+    public String toString() {
+        return "Seminar{" + "id=" + id + ", name=" + name + '}';
     }
 }
