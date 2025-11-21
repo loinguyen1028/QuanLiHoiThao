@@ -231,8 +231,22 @@
                             ? "img/test1.png"
                             : s.getImage();
 
-                    String desc = s.getDescription() != null ? s.getDescription() : "";
-                    if (desc.length() > 110) desc = desc.substring(0, 110) + "...";
+                    String rawDesc = s.getDescription() != null ? s.getDescription() : "";
+
+                    // 1. Loại bỏ toàn bộ thẻ HTML (bao gồm <img>, <p>, <b>...) dùng Regex
+                    String cleanDesc = rawDesc.replaceAll("\\<.*?\\>", "");
+
+                    // 2. Giải mã ký tự đặc biệt nếu cần (ví dụ &nbsp; thành khoảng trắng)
+                    // (Bước này tùy chọn, nhưng nên làm nếu text dính nhau)
+                    cleanDesc = cleanDesc.replace("&nbsp;", " ");
+
+                    // 3. Cắt chuỗi an toàn trên văn bản thuần
+                    String descToDisplay = "";
+                    if (cleanDesc.length() > 60) {
+                        descToDisplay = cleanDesc.substring(0, 50) + "...";
+                    } else {
+                        descToDisplay = cleanDesc;
+                    }
             %>
 
             <div class="col-lg-6">
@@ -252,7 +266,8 @@
                                 </a>
                             </h3>
 
-                            <p><%= desc %></p>
+                            <p><%= descToDisplay %></p>
+
                             <h5 class="mb-0">
                                 <i class="bi bi-person-circle"></i>
                                 <%= (s.getSpeaker() != null && !s.getSpeaker().isBlank())
