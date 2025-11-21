@@ -102,8 +102,10 @@ public class ExportExcelServlet extends HttpServlet {
             // Tạo Tiêu đề Cột
             Row headerRow = sheet.createRow(0);
             headerRow.setHeightInPoints(30);
+
+            // ************ CHỈNH SỬA DUY NHẤT: THÊM MÃ CHECK-IN VÀO TIÊU ĐỀ CỘT ************
             String[] columns = {
-                    "ID", "Họ và Tên", "Email", "Điện thoại",
+                    "ID", "Mã Check-in", "Họ và Tên", "Email", "Điện thoại", // Thêm "Mã Check-in"
                     "Loại khách", "Tên Hội Thảo", "VIP", "Check-in", "Ngày Đăng Ký"
             };
 
@@ -119,13 +121,16 @@ public class ExportExcelServlet extends HttpServlet {
                 for (Register r : list) {
                     Row row = sheet.createRow(rowNum++);
 
-                    createCell(row, 0, String.valueOf(r.getId()), dataStyle);
-                    createCell(row, 1, r.getName(), dataStyle);
-                    createCell(row, 2, r.getEmail(), dataStyle);
-                    createCell(row, 3, r.getPhone(), dataStyle);
-                    createCell(row, 4, r.getUserType(), dataStyle);
-                    createCell(row, 5, r.getEventName(), dataStyle);
-                    createCell(row, 6, r.isVip() ? "Có" : "Không", dataStyle);
+                    int col = 0; //
+
+                    createCell(row, col++, String.valueOf(r.getId()), dataStyle);
+                    createCell(row, col++, r.getCheckInId(), dataStyle);
+                    createCell(row, col++, r.getName(), dataStyle);
+                    createCell(row, col++, r.getEmail(), dataStyle);
+                    createCell(row, col++, r.getPhone(), dataStyle);
+                    createCell(row, col++, r.getUserType(), dataStyle);
+                    createCell(row, col++, r.getEventName(), dataStyle);
+                    createCell(row, col++, r.isVip() ? "Có" : "Không", dataStyle);
 
                     // Xử lý Check-in text
                     String checkInInfo = "Chưa";
@@ -134,10 +139,10 @@ public class ExportExcelServlet extends HttpServlet {
                         if (timeStr.length() > 16) timeStr = timeStr.substring(0, 16);
                         checkInInfo = timeStr;
                     }
-                    createCell(row, 7, checkInInfo, dataStyle);
+                    createCell(row, col++, checkInInfo, dataStyle);
 
                     // Ngày đăng ký
-                    createCell(row, 8, (r.getRegisterDate() != null ? r.getRegisterDate().toString() : ""), dataStyle);
+                    createCell(row, col++, (r.getRegisterDate() != null ? r.getRegisterDate().toString() : ""), dataStyle);
                 }
             }
 
