@@ -185,7 +185,7 @@
 
                         <td>
                             <div class="font-weight-bold text-primary"><%= r.getName() %></div>
-                            <small class="text-muted">Mã: <%= r.getRegistrationCode() %></small>
+                            <small class="text-muted">Mã Check-in: <%= r.getCheckInId() %></small>
                         </td>
 
                         <td>
