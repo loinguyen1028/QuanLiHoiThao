@@ -1,5 +1,18 @@
 <%-- file: admin_header.jsp --%>
 <%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
+<%@ page import="java.util.List" %>
+<%@ page import="model.Category" %>
+<%@ page import="service.CategoryService" %>
+<%@ page import="serviceImpl.CategoryServiceImpl" %>
+<%@ page import="utils.DataSourceUtil" %>
+
+<%
+    javax.sql.DataSource ds = DataSourceUtil.getDataSource();
+    CategoryService categoryService = new CategoryServiceImpl(ds);
+    List<Category> sidebarCategories = categoryService.findAll();
+%>
+
+
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -94,16 +107,20 @@
             </a>
             <div id="collapseRegister" class="collapse" aria-labelledby="headingRegister" data-parent="#accordionSidebar">
                 <div class="bg-white py-2 collapse-inner rounded">
-                    <h6 class="collapse-header">Danh sách người đăng ký</h6>
-                    <a class="collapse-item" href="<%=request.getContextPath()%>/list-user?type=environment">
-                        Hội thảo môi trường
+                    <h6 class="collapse-header">Danh mục hội thảo</h6>
+
+                    <% if (sidebarCategories != null && !sidebarCategories.isEmpty()) { %>
+                    <% for (Category c : sidebarCategories) { %>
+                    <a class="collapse-item"
+                       href="<%=request.getContextPath()%>/list-user?categoryId=<%= c.getId() %>">Hội Thảo 
+                        <%= c.getName() %>
                     </a>
-                    <a class="collapse-item" href="<%=request.getContextPath()%>/list-user?type=technology">
-                        Hội thảo công nghệ
-                    </a>
-                    <a class="collapse-item" href="<%=request.getContextPath()%>/list-user?type=science">
-                        Hội thảo khoa học
-                    </a>
+                    <% } %>
+                    <% } else { %>
+                    <span class="collapse-item text-muted">Chưa có danh mục nào.</span>
+                    <% } %>
+
+
                 </div>
             </div>
         </li>
