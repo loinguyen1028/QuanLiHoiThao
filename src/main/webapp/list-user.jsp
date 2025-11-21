@@ -5,13 +5,13 @@
 <jsp:include page="admin-header.jsp" />
 
 <%
-    // --- LẤY DỮ LIỆU TỪ SERVLET ---
+    // 1. Lấy dữ liệu từ Servlet
     List<Register> list = (List<Register>) request.getAttribute("list");
     List<Seminar> seminars = (List<Seminar>) request.getAttribute("seminars");
     String categoryName = (String) request.getAttribute("categoryName");
     String type = (String) request.getAttribute("type");
 
-    // Lấy lại trạng thái các bộ lọc để hiển thị (selected)
+    // 2. Lấy lại trạng thái các bộ lọc để hiển thị (selected)
     int currentSid = (request.getAttribute("currentSeminarId") != null) ? (Integer) request.getAttribute("currentSeminarId") : 0;
     int vipStatus = (request.getAttribute("vipStatus") != null) ? (Integer) request.getAttribute("vipStatus") : -1;
     int checkInStatus = (request.getAttribute("checkInStatus") != null) ? (Integer) request.getAttribute("checkInStatus") : -1;
@@ -22,13 +22,13 @@
     String keyword = request.getParameter("keyword");
     if(keyword == null) keyword = "";
 
-    // Tính toán phân trang
+    // 3. Tính toán phân trang
     Integer currentPageObj = (Integer) request.getAttribute("currentPage");
     Integer totalPagesObj = (Integer) request.getAttribute("totalPages");
     int currentPage = (currentPageObj != null) ? currentPageObj : 1;
     int totalPages = (totalPagesObj != null) ? totalPagesObj : 1;
 
-    // Tạo chuỗi query params để giữ bộ lọc khi bấm chuyển trang
+    // 4. Tạo chuỗi query params để giữ bộ lọc khi bấm chuyển trang
     StringBuilder params = new StringBuilder();
     params.append("&vipStatus=").append(vipStatus);
     params.append("&seminarId=").append(currentSid);
@@ -85,14 +85,29 @@
         font-size: 0.8rem;
         border-bottom: 2px solid #e3e6f0;
         vertical-align: middle;
+        white-space: nowrap;
     }
     .table td { vertical-align: middle; font-size: 0.9rem; padding: 12px; }
 
     /* Badges */
     .badge-vip { background-color: #f6c23e; color: white; padding: 5px 10px; border-radius: 10px; font-size: 0.75rem; }
-    .badge-normal { background-color: #eaecf4; color: #858796; padding: 5px 10px; border-radius: 10px; font-size: 0.75rem; }
-    .badge-checked { background-color: #1cc88a; color: white; }
-    .badge-pending { background-color: #e74a3b; color: white; }
+    .badge-checked { background-color: #1cc88a; color: white; padding: 5px 10px; border-radius: 10px; font-size: 0.75rem;}
+    .badge-pending { background-color: #e74a3b; color: white; padding: 5px 10px; border-radius: 10px; font-size: 0.75rem;}
+
+    /* Avatar chữ cái */
+    .avatar-circle {
+        width: 40px;
+        height: 40px;
+        background-color: #4e73df;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin-right: 10px;
+    }
 </style>
 
 <div class="container-fluid">
@@ -136,14 +151,14 @@
         </select>
 
         <select name="vipStatus" class="form-select filter-input" style="width: 130px;" onchange="submitForm()">
-            <option value="-1">⭐ Tất cả</option>
-            <option value="1" <%= vipStatus == 1 ? "selected" : "" %>>VIP</option>
+            <option value="-1">⭐ VIP: All</option>
+            <option value="1" <%= vipStatus == 1 ? "selected" : "" %>>Chỉ VIP</option>
             <option value="0" <%= vipStatus == 0 ? "selected" : "" %>>Thường</option>
         </select>
 
         <select name="checkInStatus" class="form-select filter-input" style="width: 150px;" onchange="submitForm()">
             <option value="-1">📍 Check-in</option>
-            <option value="1" <%= checkInStatus == 1 ? "selected" : "" %>>Đã Check-in</option>
+            <option value="1" <%= checkInStatus == 1 ? "selected" : "" %>>Đã xong</option>
             <option value="0" <%= checkInStatus == 0 ? "selected" : "" %>>Chưa</option>
         </select>
 
@@ -169,7 +184,7 @@
                     <tr>
                         <th class="text-center">ID</th>
                         <th>Họ và tên</th>
-                        <th>Email / SĐT</th>
+                        <th>Thông tin liên hệ</th>
                         <th class="text-center">Loại khách</th>
                         <th>Hội thảo đăng ký</th>
                         <th class="text-center">VIP</th>
@@ -184,8 +199,15 @@
                         <td class="text-center text-muted">#<%= r.getId() %></td>
 
                         <td>
-                            <div class="font-weight-bold text-primary"><%= r.getName() %></div>
-                            <small class="text-muted">Mã Check-in: <%= r.getCheckInId() %></small>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle">
+                                    <%= (r.getName() != null && !r.getName().isEmpty()) ? r.getName().substring(0, 1).toUpperCase() : "U" %>
+                                </div>
+                                <div>
+                                    <div class="font-weight-bold text-primary"><%= r.getName() %></div>
+                                    <small class="text-muted">Mã: <%= (r.getCheckInId() != null) ? r.getCheckInId() : "N/A" %></small>
+                                </div>
+                            </div>
                         </td>
 
                         <td>
@@ -204,7 +226,7 @@
                         <td class="text-center">
                             <a href="toggle-vip?id=<%= r.getId() %>" class="text-decoration-none">
                                 <% if(r.isVip()) { %>
-                                <span class="badge badge-vip"><i class="fas fa-star"></i> VIP</span>
+                                <span class="badge badge-vip shadow-sm"><i class="fas fa-star"></i> VIP</span>
                                 <% } else { %>
                                 <i class="far fa-star text-gray-400"></i>
                                 <% } %>
@@ -213,9 +235,9 @@
 
                         <td class="text-center">
                             <% if (r.getCheckinTime() != null) { %>
-                            <span class="badge badge-checked" title="<%= r.getCheckinTime() %>"><i class="fas fa-check"></i> Rồi</span>
+                            <span class="badge badge-checked shadow-sm" title="<%= r.getCheckinTime() %>"><i class="fas fa-check"></i> Rồi</span>
                             <% } else { %>
-                            <span class="badge badge-pending">Chưa</span>
+                            <span class="badge badge-pending shadow-sm">Chưa</span>
                             <% } %>
                         </td>
 
@@ -261,13 +283,8 @@
     }
 
     function exportExcel() {
-        // Lấy form
         var form = document.getElementById("filterForm");
-
-        // Tạo URL export dựa trên dữ liệu trong form
         var params = new URLSearchParams(new FormData(form)).toString();
-
-        // Chuyển hướng sang Servlet Export
         window.location.href = "export-excel?" + params;
     }
 </script>
