@@ -16,8 +16,6 @@ import utils.DataSourceUtil;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @WebServlet("/export-excel")
@@ -34,7 +32,6 @@ public class ExportExcelServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
-        // 1. Lấy loại hội thảo
         String type = req.getParameter("type");
         if (type == null) type = "environment";
 
@@ -47,14 +44,12 @@ public class ExportExcelServlet extends HttpServlet {
             default:           categoryId = 1; sheetName = "MoiTruong"; break;
         }
 
-        // 2. Lấy dữ liệu
         List<Register> list = registerService.findAllByCategoryId(categoryId);
 
-        // 3. TẠO FILE EXCEL
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet(sheetName);
 
-            // --- STYLE CHO TIÊU ĐỀ (Đậm, Giữa, Nền Xám) ---
+            // Style Header
             CellStyle headerStyle = workbook.createCellStyle();
             Font font = workbook.createFont();
             font.setBold(true);
@@ -64,17 +59,20 @@ public class ExportExcelServlet extends HttpServlet {
             headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
             headerStyle.setAlignment(HorizontalAlignment.CENTER);
             headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
-            setBorder(headerStyle); // Kẻ khung
+            setBorder(headerStyle);
 
-            // --- STYLE CHO DỮ LIỆU (Kẻ khung) ---
+            // Style Data
             CellStyle dataStyle = workbook.createCellStyle();
             setBorder(dataStyle);
             dataStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 
-            // --- TẠO DÒNG TIÊU ĐỀ ---
+            // --- 1. SỬA TIÊU ĐỀ CỘT ---
             Row headerRow = sheet.createRow(0);
-            headerRow.setHeightInPoints(30); // Cao hơn chút cho đẹp
-            String[] columns = {"ID", "Họ và Tên", "Email", "Điện thoại", "Loại khách", "Hội Thảo", "VIP", "Mã Check-in", "Ngày Đăng Ký"};
+            headerRow.setHeightInPoints(30);
+            String[] columns = {
+                    "ID", "Họ và Tên", "Email", "Điện thoại",
+                    "Loại khách", "Hội Thảo", "VIP", "Trạng thái Check-in", "Ngày Đăng Ký"
+            };
 
             for (int i = 0; i < columns.length; i++) {
                 Cell cell = headerRow.createCell(i);
@@ -82,7 +80,7 @@ public class ExportExcelServlet extends HttpServlet {
                 cell.setCellStyle(headerStyle);
             }
 
-            // --- ĐỔ DỮ LIỆU ---
+            // --- 2. SỬA DỮ LIỆU ---
             int rowNum = 1;
             for (Register r : list) {
                 Row row = sheet.createRow(rowNum++);
@@ -94,19 +92,27 @@ public class ExportExcelServlet extends HttpServlet {
                 createCell(row, 4, r.getUserType(), dataStyle);
                 createCell(row, 5, r.getEventName(), dataStyle);
                 createCell(row, 6, r.isVip() ? "VIP" : "", dataStyle);
-                createCell(row, 7, r.getCheckInId(), dataStyle);
+
+                // --- LOGIC CHECK-IN MỚI ---
+                String checkInInfo;
+                if (r.getCheckinTime() != null) {
+                    // Lấy thời gian check-in (cắt bớt phần giây lẻ nếu muốn gọn)
+                    checkInInfo = "Đã check-in: " + r.getCheckinTime().toString().substring(0, 16);
+                } else {
+                    checkInInfo = "Chưa";
+                }
+                createCell(row, 7, checkInInfo, dataStyle);
+                // --------------------------
+
                 createCell(row, 8, (r.getRegisterDate() != null ? r.getRegisterDate().toString() : ""), dataStyle);
             }
 
-            // --- QUAN TRỌNG: TỰ ĐỘNG GIÃN CỘT ---
             for (int i = 0; i < columns.length; i++) {
                 sheet.autoSizeColumn(i);
-                // Cộng thêm chút chiều rộng cho thoáng (khoảng 2 ký tự)
                 int currentWidth = sheet.getColumnWidth(i);
                 sheet.setColumnWidth(i, currentWidth + 1000);
             }
 
-            // 4. Xuất file ra trình duyệt
             String fileName = "Danh_Sach_" + sheetName + ".xlsx";
             resp.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             resp.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
@@ -117,7 +123,6 @@ public class ExportExcelServlet extends HttpServlet {
         }
     }
 
-    // Hàm phụ để kẻ khung nhanh
     private void setBorder(CellStyle style) {
         style.setBorderBottom(BorderStyle.THIN);
         style.setBorderTop(BorderStyle.THIN);
@@ -125,7 +130,6 @@ public class ExportExcelServlet extends HttpServlet {
         style.setBorderLeft(BorderStyle.THIN);
     }
 
-    // Hàm phụ tạo ô nhanh
     private void createCell(Row row, int column, String value, CellStyle style) {
         Cell cell = row.createCell(column);
         cell.setCellValue(value != null ? value : "");
