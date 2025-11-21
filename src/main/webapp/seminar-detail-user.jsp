@@ -71,37 +71,174 @@
     <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
+
+    <style>
+        .seminar-header-badge {
+            font-size: 0.85rem;
+        }
+        .seminar-main-card {
+            border-radius: 12px;
+        }
+        .seminar-sidebar-card {
+            border-radius: 12px;
+        }
+        .seminar-cover-img {
+            width: 100%;
+            border-radius: 12px;
+            object-fit: cover;
+            max-height: 260px;
+        }
+    </style>
 </head>
 
 <body>
 
 <%@ include file="navbar.jsp" %>
-
-<div class="container-fluid bg-light py-4 mb-4">
+<!-- Spinner Start -->
+<div id="spinner"
+     class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- Spinner End -->
+<!-- Thanh tiêu đề trên cùng -->
+<div class="container-fluid bg-light py-3 mb-4 border-bottom">
     <div class="container">
-        <h3 class="mb-1"><i class="bi bi-calendar-event"></i> Chi tiết hội thảo</h3>
-        <p class="mb-0 text-muted"><%= seminar.getName() %></p>
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+            <div>
+                <h3 class="mb-1">
+                    <i class="bi bi-calendar-event me-2"></i>Chi tiết hội thảo
+                </h3>
+                <p class="mb-0 text-muted"><%= seminar.getName() %></p>
+            </div>
+            <div class="mt-3 mt-md-0">
+                <a href="<%= request.getContextPath() %>/home.jsp"
+                   class="btn btn-outline-secondary btn-sm mt-1">
+                    <i class="bi bi-arrow-left me-1"></i> Quay lại trang chủ
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
+<!-- Nội dung chính -->
 <div class="container py-4">
     <div class="row g-4">
-        <div class="col-md-5">
+
+        <!-- Cột trái: thông tin, mô tả -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 seminar-main-card mb-4">
+                <div class="card-body">
+                    <h2 class="mb-3"><%= seminar.getName() %></h2>
+
+                    <div class="mb-3">
+                        <p class="text-muted mb-2">
+                            <i class="bi bi-calendar-week me-2"></i>
+                            Thời gian diễn ra:
+                            <strong><%= seminar.getStart_date() %></strong>
+                            –
+                            <strong><%= seminar.getEnd_date() %></strong>
+                        </p>
+
+                        <p class="text-muted mb-2">
+                            <i class="bi bi-geo-alt me-2"></i>
+                            Địa điểm:
+                            <strong><%= seminar.getLocation() %></strong>
+                        </p>
+
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-person-circle me-2"></i>
+                            Diễn giả:
+                            <strong><%= seminar.getSpeaker() %></strong>
+                        </p>
+                    </div>
+
+                    <hr>
+
+                    <h5 class="mb-2">Mô tả hội thảo</h5>
+                    <p class="mb-0" style="text-align: justify;">
+                        <%= seminar.getDescription() %>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Khối trạng thái & nút đăng ký / quay lại -->
+            <div class="card shadow-sm border-0 seminar-main-card">
+                <div class="card-body d-flex flex-column flex-md-row align-items-md-center justify-content-between">
+                    <div class="mb-3 mb-md-0">
+                        <% if (isNotYetOpen) { %>
+                        <div class="alert alert-warning mb-2 p-2">
+                            <small>
+                                <i class="bi bi-alarm me-1"></i>
+                                Chưa đến giờ đăng ký. Cổng mở lúc:
+                                <strong><%= sdf.format(openTime) %></strong>
+                            </small>
+                        </div>
+                        <% } else if (isClosed) { %>
+                        <div class="alert alert-danger mb-2 p-2">
+                            <small>
+                                <i class="bi bi-x-circle me-1"></i>
+                                Đã hết hạn đăng ký. Cổng đóng lúc:
+                                <strong><%= sdf.format(closeTime) %></strong>
+                            </small>
+                        </div>
+                        <% } else { %>
+                        <div class="alert alert-success mb-2 p-2">
+                            <small>
+                                <i class="bi bi-check2-circle me-1"></i>
+                                Cổng đăng ký đang mở. Hãy hoàn tất đăng ký trước:
+                                <strong><%= sdf.format(closeTime) %></strong>
+                            </small>
+                        </div>
+                        <% } %>
+                    </div>
+
+                    <div class="text-md-end">
+                        <% if (isNotYetOpen) { %>
+                        <button class="btn btn-secondary btn-lg px-4 mb-2" disabled>
+                            <i class="bi bi-lock-fill me-1"></i> Chưa mở đăng ký
+                        </button>
+                        <% } else if (isClosed) { %>
+                        <button class="btn btn-secondary btn-lg px-4 mb-2" disabled>
+                            <i class="bi bi-x-octagon-fill me-1"></i> Đã đóng đăng ký
+                        </button>
+                        <% } else { %>
+                        <a href="<%= request.getContextPath() %>/register_user?seminarId=<%= seminar.getId() %>"
+                           class="btn btn-primary btn-lg px-4 mb-2">
+                            <i class="bi bi-check2-circle me-1"></i> Đăng ký tham dự
+                        </a>
+                        <% } %>
+
+                        <br>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột phải: ảnh + thông tin nhanh -->
+        <div class="col-lg-4">
             <%
                 String img = seminar.getImage();
                 if (img == null || img.isBlank()) {
                     img = "img/default-seminar.jpg";
                 }
             %>
-            <img src="<%= img %>" alt="Ảnh hội thảo" class="img-fluid rounded shadow-sm mb-3">
+            <div class="mb-3">
+                <img src="<%= img %>" alt="Ảnh hội thảo" class="img-fluid seminar-cover-img shadow-sm">
+            </div>
 
-            <div class="card border-0 shadow-sm">
+            <div class="card shadow-sm border-0 seminar-sidebar-card mb-3">
                 <div class="card-body">
-                    <h5 class="card-title mb-3">Thông tin nhanh</h5>
+                    <h5 class="card-title mb-3">
+                        <i class="bi bi-info-circle text-primary me-2"></i>Thông tin nhanh
+                    </h5>
 
                     <p class="mb-2">
                         <i class="bi bi-people-fill text-primary me-2"></i>
-                        Số lượng tối đa: <strong><%= seminar.getMaxAttendance() %></strong>
+                        Số lượng tối đa:
+                        <strong><%= seminar.getMaxAttendance() %></strong>
                     </p>
 
                     <p class="mb-2">
@@ -118,82 +255,30 @@
 
                     <hr>
 
-                    <p class="mb-1 text-muted small"><i class="bi bi-hourglass-top me-1"></i> Thời gian mở đăng ký:</p>
-                    <p class="fw-bold text-dark ms-4">
+                    <p class="mb-1 text-muted small">
+                        <i class="bi bi-hourglass-top me-1"></i> Thời gian mở đăng ký:
+                    </p>
+                    <p class="fw-bold text-dark ms-3">
                         <%= (seminar.getRegistrationOpen() != null) ? sdf.format(seminar.getRegistrationOpen()) : "Đang mở" %>
                     </p>
 
-                    <p class="mb-1 text-muted small"><i class="bi bi-hourglass-bottom me-1"></i> Thời gian đóng đăng ký:</p>
-                    <p class="fw-bold text-danger ms-4">
-                        <%= sdf.format(closeTime) %>
-                        <% if (isAutoDeadline) { %>
-                        <br><span class="badge bg-light text-muted fw-normal" style="font-size: 0.75rem;">(Tự động đóng trước 1 ngày)</span>
-                        <% } %>
+                    <p class="mb-1 text-muted small">
+                        <i class="bi bi-hourglass-bottom me-1"></i> Thời gian đóng đăng ký:
                     </p>
+                    <p class="fw-bold text-danger ms-3 mb-0">
+                        <%= sdf.format(closeTime) %>
+                    </p>
+                    <% if (isAutoDeadline) { %>
+                    <p class="ms-3 mb-0">
+                            <span class="badge bg-light text-muted fw-normal" style="font-size: 0.75rem;">
+                                (Tự động đóng trước 1 ngày)
+                            </span>
+                    </p>
+                    <% } %>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-7">
-            <h2 class="mb-3"><%= seminar.getName() %></h2>
-
-            <p class="text-muted mb-2">
-                <i class="bi bi-calendar-week"></i>
-                Thời gian diễn ra:
-                <strong><%= seminar.getStart_date() %></strong>
-                –
-                <strong><%= seminar.getEnd_date() %></strong>
-            </p>
-
-            <p class="text-muted mb-2">
-                <i class="bi bi-geo-alt"></i>
-                Địa điểm:
-                <strong><%= seminar.getLocation() %></strong>
-            </p>
-
-            <p class="text-muted mb-4">
-                <i class="bi bi-person-circle"></i>
-                Diễn giả:
-                <strong><%= seminar.getSpeaker() %></strong>
-            </p>
-
-            <h5 class="mb-2">Mô tả hội thảo</h5>
-            <p class="mb-4">
-                <%= seminar.getDescription() %>
-            </p>
-
-            <div class="mt-4">
-                <% if (isNotYetOpen) { %>
-                <div class="alert alert-warning">
-                    <i class="bi bi-alarm"></i> Chưa đến giờ đăng ký!<br>
-                    Cổng mở lúc: <strong><%= sdf.format(openTime) %></strong>
-                </div>
-                <button class="btn btn-secondary btn-lg px-4" disabled>
-                    <i class="bi bi-lock-fill me-1"></i> Chưa mở đăng ký
-                </button>
-
-                <% } else if (isClosed) { %>
-                <div class="alert alert-danger">
-                    <i class="bi bi-x-circle"></i> Đã hết hạn đăng ký!<br>
-                    Cổng đã đóng lúc: <strong><%= sdf.format(closeTime) %></strong>
-                </div>
-                <button class="btn btn-secondary btn-lg px-4" disabled>
-                    <i class="bi bi-x-octagon-fill me-1"></i> Đã đóng đăng ký
-                </button>
-
-                <% } else { %>
-                <a href="<%= request.getContextPath() %>/register_user?seminarId=<%= seminar.getId() %>"
-                   class="btn btn-primary btn-lg px-4">
-                    <i class="bi bi-check2-circle me-1"></i> Đăng ký tham dự
-                </a>
-                <% } %>
-
-                <a href="<%= request.getContextPath() %>/home.jsp"
-                   class="btn btn-outline-secondary btn-lg ms-2">
-                    Quay lại trang chủ
-                </a>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -204,7 +289,7 @@
 <script src="lib/wow/wow.min.js"></script>
 <script src="lib/easing/easing.min.js"></script>
 <script src="lib/waypoints/waypoints.min.js"></script>
-<script src="lib/owlcarousel/owl.carousel.min.js"></script>
+script src="lib/owlcarousel/owl.carousel.min.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

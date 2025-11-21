@@ -277,7 +277,9 @@
                         <!-- Previous -->
                         <li class="page-item <%= (currentPage <= 1 ? "disabled" : "") %>">
                             <a class="page-link"
-                               href="<%= ctx %>/home.jsp?page=<%= (currentPage - 1) %>#testimonial-section">Trước</a>
+                               href="<%= ctx %>/home.jsp?page=<%= (currentPage - 1) %>#testimonial-section">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
                         </li>
 
                         <!-- Page numbers -->
@@ -295,8 +297,11 @@
                         <!-- Next -->
                         <li class="page-item <%= (currentPage >= totalPages ? "disabled" : "") %>">
                             <a class="page-link"
-                               href="<%= ctx %>/home.jsp?page=<%= (currentPage + 1) %>#testimonial-section">Sau</a>
+                               href="<%= ctx %>/home.jsp?page=<%= (currentPage + 1) %>#testimonial-section">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
                         </li>
+
 
                     </ul>
                 </nav>
@@ -310,7 +315,7 @@
         </div>
     </div>
 </div>
-<!-- Testimonial End -->
+<!-- Hội thảo -->
 
 <!-- Team Start -->
 <div class="container-fluid py-5">
@@ -319,12 +324,12 @@
         </h1>
         <div class="row g-4">
 
-            <div class="col-md-6 col-lg-3 wow fadeIn" data-wow-delay="0.1s">
+            <div class="col-md-4">
                 <div class="team-item position-relative overflow-hidden">
                     <img class="img-fluid w-100" src="img/a5.png" alt="">
                     <div class="team-overlay">
-                        <small class="mb-2">Function</small>
-                        <h4 class="lh-base text-light">Huy Hoang</h4>
+                        <small>Function</small>
+                        <h4 class="text-light">Huy Hoang</h4>
                         <div class="d-flex justify-content-center">
                             <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">
                                 <i class="fab fa-facebook-f"></i>
@@ -342,12 +347,13 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-6 col-lg-3 wow fadeIn" data-wow-delay="0.3s">
+
+            <div class="col-md-4">
                 <div class="team-item position-relative overflow-hidden">
                     <img class="img-fluid w-100" src="img/a2.png" alt="">
                     <div class="team-overlay">
-                        <small class="mb-2">Front-End</small>
-                        <h4 class="lh-base text-light">Phuoc Loi</h4>
+                        <small>Front-End</small>
+                        <h4 class="text-light">Phuoc Loi</h4>
                         <div class="d-flex justify-content-center">
                             <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">
                                 <i class="fab fa-facebook-f"></i>
@@ -365,12 +371,13 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-6 col-lg-3 wow fadeIn" data-wow-delay="0.5s">
+
+            <div class="col-md-4">
                 <div class="team-item position-relative overflow-hidden">
                     <img class="img-fluid w-100" src="img/a3.png" alt="">
                     <div class="team-overlay">
-                        <small class="mb-2">Back-End</small>
-                        <h4 class="lh-base text-light">Duc Quy</h4>
+                        <small>Back-End</small>
+                        <h4 class="text-light">Duc Quy</h4>
                         <div class="d-flex justify-content-center">
                             <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">
                                 <i class="fab fa-facebook-f"></i>

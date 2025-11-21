@@ -74,7 +74,7 @@
                     </div>
 
                     <!-- Link Admin -->
-                    <a href="<%= ctx %>/admin.jsp" class="nav-item nav-link">Admin</a>
+                    <a href="<%= ctx %>/about.jsp" class="nav-item nav-link">Về chúng tôi</a>
                 </div>
             </div>
         </nav>
