@@ -5,114 +5,78 @@
 <jsp:include page="admin-header.jsp" />
 
 <%
-    // 1. Lấy dữ liệu từ Servlet
+    // 1. LẤY DỮ LIỆU TỪ SERVLET
     List<Register> list = (List<Register>) request.getAttribute("list");
     List<Seminar> seminars = (List<Seminar>) request.getAttribute("seminars");
     String categoryName = (String) request.getAttribute("categoryName");
     String type = (String) request.getAttribute("type");
 
-    // 2. Lấy lại trạng thái các bộ lọc để hiển thị (selected)
-    int currentSid = (request.getAttribute("currentSeminarId") != null) ? (Integer) request.getAttribute("currentSeminarId") : 0;
-    int vipStatus = (request.getAttribute("vipStatus") != null) ? (Integer) request.getAttribute("vipStatus") : -1;
-    int checkInStatus = (request.getAttribute("checkInStatus") != null) ? (Integer) request.getAttribute("checkInStatus") : -1;
+    // Lấy ID Category (quan trọng để không bị nhảy tab)
+    Integer catIdObj = (Integer) request.getAttribute("categoryId");
+    int categoryId = (catIdObj != null) ? catIdObj : 1;
 
-    String userType = request.getParameter("userType");
+    // 2. LẤY TRẠNG THÁI CÁC BỘ LỌC (Để giữ 'Selected')
+    // Seminar ID
+    Integer sidObj = (Integer) request.getAttribute("currentSeminarId");
+    int currentSid = (sidObj != null) ? sidObj : 0;
+
+    // VIP
+    Integer vipObj = (Integer) request.getAttribute("vipStatus");
+    int vipStatus = (vipObj != null) ? vipObj : -1;
+
+    // Check-in
+    Integer checkObj = (Integer) request.getAttribute("checkInStatus");
+    int checkInStatus = (checkObj != null) ? checkObj : -1;
+
+    // User Type & Keyword
+    String userType = (String) request.getAttribute("userType");
     if(userType == null) userType = "";
 
-    String keyword = request.getParameter("keyword");
+    String keyword = request.getParameter("keyword"); // Lấy từ param cho chắc chắn
     if(keyword == null) keyword = "";
 
-    // 3. Tính toán phân trang
+    // 3. PHÂN TRANG
     Integer currentPageObj = (Integer) request.getAttribute("currentPage");
     Integer totalPagesObj = (Integer) request.getAttribute("totalPages");
     int currentPage = (currentPageObj != null) ? currentPageObj : 1;
     int totalPages = (totalPagesObj != null) ? totalPagesObj : 1;
 
-    // 4. Tạo chuỗi query params để giữ bộ lọc khi bấm chuyển trang
+    // 4. TẠO CHUỖI QUERY PARAMS (Để giữ bộ lọc khi bấm phân trang)
     StringBuilder params = new StringBuilder();
-    params.append("&vipStatus=").append(vipStatus);
+    params.append("&type=").append(type); // Giữ loại danh mục
+    params.append("&categoryId=").append(categoryId); // Giữ ID danh mục
     params.append("&seminarId=").append(currentSid);
+    params.append("&vipStatus=").append(vipStatus);
     params.append("&checkInStatus=").append(checkInStatus);
+
     if(!userType.isEmpty()) params.append("&userType=").append(URLEncoder.encode(userType, StandardCharsets.UTF_8));
     if(!keyword.isEmpty()) params.append("&keyword=").append(URLEncoder.encode(keyword, StandardCharsets.UTF_8));
+
     String queryParams = params.toString();
 %>
 
 <style>
-    /* CSS TÙY CHỈNH CHO GIAO DIỆN ĐẸP */
     body { font-family: 'Nunito', sans-serif; background-color: #f8f9fc; }
-
-    /* Thanh công cụ lọc */
-    .filter-bar {
-        background: white;
-        padding: 15px 20px;
-        border-radius: 15px;
-        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
-        margin-bottom: 20px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        align-items: center;
-    }
-
-    .filter-input {
-        border-radius: 20px;
-        border: 1px solid #d1d3e2;
-        font-size: 0.9rem;
-        padding: 0.375rem 1rem;
-        min-width: 150px;
-    }
-
-    .filter-input:focus {
-        box-shadow: none;
-        border-color: #4e73df;
-    }
-
-    /* Nút bấm */
+    .filter-bar { background: white; padding: 15px 20px; border-radius: 15px; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1); margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .filter-input { border-radius: 20px; border: 1px solid #d1d3e2; font-size: 0.9rem; padding: 0.375rem 1rem; min-width: 150px; }
+    .filter-input:focus { box-shadow: none; border-color: #4e73df; }
     .btn-custom { border-radius: 20px; font-weight: 600; font-size: 0.9rem; padding: 6px 20px; transition: 0.2s; }
     .btn-search { background: #4e73df; color: white; border: none; }
     .btn-search:hover { background: #2e59d9; color: white; transform: translateY(-1px); }
     .btn-excel { background: #1cc88a; color: white; border: none; }
     .btn-excel:hover { background: #17a673; color: white; transform: translateY(-1px); }
-
-    /* Bảng */
     .table-card { border-radius: 15px; overflow: hidden; border: none; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1); }
-    .table thead th {
-        background-color: #f8f9fc;
-        color: #4e73df;
-        font-weight: 700;
-        text-transform: uppercase;
-        font-size: 0.8rem;
-        border-bottom: 2px solid #e3e6f0;
-        vertical-align: middle;
-        white-space: nowrap;
-    }
+    .table thead th { background-color: #f8f9fc; color: #4e73df; font-weight: 700; text-transform: uppercase; font-size: 0.8rem; border-bottom: 2px solid #e3e6f0; vertical-align: middle; white-space: nowrap; }
     .table td { vertical-align: middle; font-size: 0.9rem; padding: 12px; }
-
-    /* Badges */
     .badge-vip { background-color: #f6c23e; color: white; padding: 5px 10px; border-radius: 10px; font-size: 0.75rem; }
     .badge-checked { background-color: #1cc88a; color: white; padding: 5px 10px; border-radius: 10px; font-size: 0.75rem;}
     .badge-pending { background-color: #e74a3b; color: white; padding: 5px 10px; border-radius: 10px; font-size: 0.75rem;}
-
-    /* Avatar chữ cái */
-    .avatar-circle {
-        width: 40px;
-        height: 40px;
-        background-color: #4e73df;
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-size: 1.2rem;
-        margin-right: 10px;
-    }
+    .avatar-circle { width: 40px; height: 40px; background-color: #4e73df; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; margin-right: 10px; }
 </style>
 
 <div class="container-fluid">
 
-    <%-- HIỂN THỊ THÔNG BÁO --%>
+    <%-- THÔNG BÁO --%>
     <% String msg = request.getParameter("msg");
         String error = request.getParameter("error");
         if (msg != null && !msg.isEmpty()) { %>
@@ -127,6 +91,8 @@
     </div>
 
     <form id="filterForm" action="list-user" method="GET" class="filter-bar">
+
+        <input type="hidden" name="categoryId" value="<%= categoryId %>">
         <input type="hidden" name="type" value="<%= type %>">
 
         <div class="input-group" style="width: 250px;">
@@ -163,7 +129,7 @@
         </select>
 
         <button type="submit" class="btn btn-custom btn-search"><i class="fas fa-search"></i></button>
-        <a href="list-user?type=<%= type %>" class="btn btn-light btn-custom" title="Xóa bộ lọc"><i class="fas fa-sync-alt"></i></a>
+        <a href="list-user?type=<%= type %>&categoryId=<%= categoryId %>" class="btn btn-light btn-custom" title="Xóa bộ lọc"><i class="fas fa-sync-alt"></i></a>
 
         <div class="ml-auto d-flex gap-2">
             <button type="button" onclick="exportExcel()" class="btn btn-custom btn-excel shadow-sm">
@@ -184,7 +150,7 @@
                     <tr>
                         <th class="text-center">ID</th>
                         <th>Họ và tên</th>
-                        <th>Thông tin liên hệ</th>
+                        <th>Email / SĐT</th>
                         <th class="text-center">Loại khách</th>
                         <th>Hội thảo đăng ký</th>
                         <th class="text-center">VIP</th>
@@ -197,7 +163,6 @@
                         for (Register r : list) { %>
                     <tr>
                         <td class="text-center text-muted">#<%= r.getId() %></td>
-
                         <td>
                             <div class="d-flex align-items-center">
                                 <div class="avatar-circle">
@@ -209,20 +174,16 @@
                                 </div>
                             </div>
                         </td>
-
                         <td>
                             <div><i class="fas fa-envelope fa-xs text-gray-400 mr-1"></i> <%= r.getEmail() %></div>
                             <div><i class="fas fa-phone fa-xs text-gray-400 mr-1"></i> <%= r.getPhone() %></div>
                         </td>
-
                         <td class="text-center">
                             <span class="badge bg-light text-dark border"><%= r.getUserType() %></span>
                         </td>
-
                         <td style="max-width: 250px;">
                             <div class="text-truncate" title="<%= r.getEventName() %>"><%= r.getEventName() %></div>
                         </td>
-
                         <td class="text-center">
                             <a href="toggle-vip?id=<%= r.getId() %>" class="text-decoration-none">
                                 <% if(r.isVip()) { %>
@@ -232,7 +193,6 @@
                                 <% } %>
                             </a>
                         </td>
-
                         <td class="text-center">
                             <% if (r.getCheckinTime() != null) { %>
                             <span class="badge badge-checked shadow-sm" title="<%= r.getCheckinTime() %>"><i class="fas fa-check"></i> Rồi</span>
@@ -240,7 +200,6 @@
                             <span class="badge badge-pending shadow-sm">Chưa</span>
                             <% } %>
                         </td>
-
                         <td class="text-center">
                             <a href="admin-user?action=edit&id=<%= r.getId() %>" class="btn btn-sm btn-info shadow-sm"><i class="fas fa-pen"></i></a>
                             <a href="admin-user?action=delete&id=<%= r.getId() %>" class="btn btn-sm btn-danger shadow-sm" onclick="return confirm('Xóa đăng ký này?');"><i class="fas fa-trash"></i></a>
@@ -258,16 +217,16 @@
                 <nav>
                     <ul class="pagination m-0">
                         <li class="page-item <%= (currentPage == 1) ? "disabled" : "" %>">
-                            <a class="page-link rounded-pill px-3 mr-1" href="list-user?type=<%=type%>&page=<%= currentPage - 1 %><%= queryParams %>">Trước</a>
+                            <a class="page-link rounded-pill px-3 mr-1" href="list-user?page=<%= currentPage - 1 %><%= queryParams %>">Trước</a>
                         </li>
                         <% for (int i = 1; i <= totalPages; i++) { %>
                         <li class="page-item <%= (i == currentPage) ? "active" : "" %>">
                             <a class="page-link rounded-circle mx-1" style="width: 35px; height: 35px; display:flex; align-items:center; justify-content:center;"
-                               href="list-user?type=<%=type%>&page=<%= i %><%= queryParams %>"><%= i %></a>
+                               href="list-user?page=<%= i %><%= queryParams %>"><%= i %></a>
                         </li>
                         <% } %>
                         <li class="page-item <%= (currentPage == totalPages) ? "disabled" : "" %>">
-                            <a class="page-link rounded-pill px-3 ml-1" href="list-user?type=<%=type%>&page=<%= currentPage + 1 %><%= queryParams %>">Sau</a>
+                            <a class="page-link rounded-pill px-3 ml-1" href="list-user?page=<%= currentPage + 1 %><%= queryParams %>">Sau</a>
                         </li>
                     </ul>
                 </nav>
