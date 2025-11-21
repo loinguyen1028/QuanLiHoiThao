@@ -110,7 +110,7 @@
 
         <!-- Cổng check-in -->
         <li class="nav-item">
-            <a class="nav-link" href="<%=request.getContextPath()%>/check-in.jsp">
+            <a class="nav-link" href="<%=request.getContextPath()%>/check-in">
                 <i class="fas fa-fw fa-qrcode"></i>
                 <span>Cổng check-in</span>
             </a>
