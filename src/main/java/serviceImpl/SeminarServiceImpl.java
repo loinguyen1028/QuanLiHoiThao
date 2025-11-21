@@ -18,7 +18,7 @@ public class SeminarServiceImpl implements SeminarService {
     public SeminarServiceImpl(DataSource ds) {
         this.seminarRepository = new SeminarRepositoryImpl(ds);
     }
-    // ✅ DÙNG CHO NAVBAR
+
     @Override
     public List<Seminar> findByCategoryId(int categoryId) {
         return seminarRepository.findByCategoryId(categoryId);

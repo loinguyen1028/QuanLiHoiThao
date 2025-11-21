@@ -55,7 +55,7 @@ public class CheckInServlet extends HttpServlet {
             req.setAttribute("lastCode", code);
         } else {
             if (r.getCheckinTime() != null) {
-                req.setAttribute("warning", "⚠️ Cảnh báo: Vé này ĐÃ check-in lúc: " + r.getCheckinTime());
+                req.setAttribute("warning", "⚠️ Cảnh báo: Vé này đã check-in lúc: " + r.getCheckinTime());
                 req.setAttribute("register", r);
             } else {
                 boolean success = registerService.checkInUser(code);
