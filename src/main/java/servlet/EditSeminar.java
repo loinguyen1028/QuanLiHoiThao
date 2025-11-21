@@ -103,8 +103,8 @@ public class EditSeminar extends HttpServlet {
                 throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu!");
             }
 
-            Timestamp registrationOpen = Timestamp.valueOf(newStartDate.minusDays(7));
-            Timestamp registrationDeadline = Timestamp.valueOf(newStartDate.minusDays(1));
+            Timestamp registrationOpen = oldSeminar.getRegistrationOpen();
+            Timestamp registrationDeadline = oldSeminar.getRegistrationDeadline();
 
             Part imagePart = request.getPart("image");
             String imagePath = oldSeminar.getImage();
