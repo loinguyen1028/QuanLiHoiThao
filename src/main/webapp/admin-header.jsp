@@ -112,7 +112,7 @@
                     <% if (sidebarCategories != null && !sidebarCategories.isEmpty()) { %>
                     <% for (Category c : sidebarCategories) { %>
                     <a class="collapse-item"
-                       href="<%=request.getContextPath()%>/list-user?categoryId=<%= c.getId() %>">Hội Thảo 
+                       href="<%=request.getContextPath()%>/list-user?categoryId=<%= c.getId() %>">Hội Thảo
                         <%= c.getName() %>
                     </a>
                     <% } %>
@@ -127,7 +127,7 @@
 
         <!-- Cổng check-in -->
         <li class="nav-item">
-            <a class="nav-link" href="<%=request.getContextPath()%>/check-in.jsp">
+            <a class="nav-link" href="<%=request.getContextPath()%>/check-in">
                 <i class="fas fa-fw fa-qrcode"></i>
                 <span>Cổng check-in</span>
             </a>
