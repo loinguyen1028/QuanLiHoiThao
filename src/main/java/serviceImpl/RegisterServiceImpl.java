@@ -2,6 +2,7 @@ package serviceImpl;
 
 import dto.ChartDataDTO;
 import dto.GuestStatDTO;
+import model.PageRequest;
 import model.Register;
 import repository.RegisterRepository;
 import repositoryImpl.RegisterRepositoryImpl;
@@ -43,7 +44,37 @@ public class RegisterServiceImpl implements RegisterService {
         return registerRepository.setCheckInTime(checkInId);
     }
     @Override
-    public List<Register> findAllByCategoryId(int categoryId) {
-        return registerRepository.findAllByCategoryId(categoryId);
+    public List<Register> findAllByCategoryId(int categoryId,int seminarIdFilter, int vipStatus) {
+        return registerRepository.findAllByCategoryId(categoryId, seminarIdFilter, vipStatus);
+    }
+
+    @Override
+    public List<Register> findAll() {
+        return registerRepository.findAll();
+    }
+
+    @Override
+    public List<Register> findAll(PageRequest pageRequest) {
+        return registerRepository.findAll(pageRequest);
+    }
+
+    @Override
+    public Register findById(int id) {
+        return this.registerRepository.findById(id);
+    }
+
+    @Override
+    public Register create(Register register) {
+        return this.registerRepository.create(register);
+    }
+
+    @Override
+    public boolean update(Register register) {
+        return registerRepository.update(register);
+    }
+
+    @Override
+    public boolean delete(int id) {
+        return registerRepository.delete(id);
     }
 }

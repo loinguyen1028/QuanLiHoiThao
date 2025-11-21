@@ -25,6 +25,7 @@ public class ExportExcelServlet extends HttpServlet {
 
     @Override
     public void init(ServletConfig config) throws ServletException {
+        super.init(config); // Nhớ gọi super.init
         DataSource ds = DataSourceUtil.getDataSource();
         this.registerService = new RegisterServiceImpl(ds);
     }
@@ -32,6 +33,7 @@ public class ExportExcelServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
+        // 1. Xử lý tham số loại danh mục
         String type = req.getParameter("type");
         if (type == null) type = "environment";
 
@@ -44,12 +46,26 @@ public class ExportExcelServlet extends HttpServlet {
             default:           categoryId = 1; sheetName = "MoiTruong"; break;
         }
 
-        List<Register> list = registerService.findAllByCategoryId(categoryId);
+        // 2. Lấy tham số lọc (Seminar ID) để xuất đúng dữ liệu người dùng đang xem
+        int seminarIdFilter = 0;
+        try {
+            String sId = req.getParameter("seminarId");
+            if (sId != null && !sId.isEmpty()) {
+                seminarIdFilter = Integer.parseInt(sId);
+            }
+        } catch (NumberFormatException e) {
+            seminarIdFilter = 0;
+        }
 
+        // 3. Gọi Service lấy dữ liệu thực
+        // Tham số thứ 3 là vipStatus, để -1 nghĩa là lấy tất cả (cả VIP và thường)
+        List<Register> list = registerService.findAllByCategoryId(categoryId, seminarIdFilter, -1);
+
+        // 4. Tạo File Excel
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet(sheetName);
 
-            // Style Header
+            // --- Style Header ---
             CellStyle headerStyle = workbook.createCellStyle();
             Font font = workbook.createFont();
             font.setBold(true);
@@ -61,17 +77,17 @@ public class ExportExcelServlet extends HttpServlet {
             headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             setBorder(headerStyle);
 
-            // Style Data
+            // --- Style Data ---
             CellStyle dataStyle = workbook.createCellStyle();
             setBorder(dataStyle);
             dataStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 
-            // --- 1. SỬA TIÊU ĐỀ CỘT ---
+            // --- Tạo Tiêu đề Cột ---
             Row headerRow = sheet.createRow(0);
             headerRow.setHeightInPoints(30);
             String[] columns = {
                     "ID", "Họ và Tên", "Email", "Điện thoại",
-                    "Loại khách", "Hội Thảo", "VIP", "Trạng thái Check-in", "Ngày Đăng Ký"
+                    "Loại khách", "Tên Hội Thảo", "VIP", "Check-in", "Ngày Đăng Ký"
             };
 
             for (int i = 0; i < columns.length; i++) {
@@ -80,39 +96,47 @@ public class ExportExcelServlet extends HttpServlet {
                 cell.setCellStyle(headerStyle);
             }
 
-            // --- 2. SỬA DỮ LIỆU ---
+            // --- Đổ dữ liệu vào dòng ---
             int rowNum = 1;
-            for (Register r : list) {
-                Row row = sheet.createRow(rowNum++);
+            if (list != null) {
+                for (Register r : list) {
+                    Row row = sheet.createRow(rowNum++);
 
-                createCell(row, 0, String.valueOf(r.getId()), dataStyle);
-                createCell(row, 1, r.getName(), dataStyle);
-                createCell(row, 2, r.getEmail(), dataStyle);
-                createCell(row, 3, r.getPhone(), dataStyle);
-                createCell(row, 4, r.getUserType(), dataStyle);
-                createCell(row, 5, r.getEventName(), dataStyle);
-                createCell(row, 6, r.isVip() ? "VIP" : "", dataStyle);
+                    createCell(row, 0, String.valueOf(r.getId()), dataStyle);
+                    createCell(row, 1, r.getName(), dataStyle);
+                    createCell(row, 2, r.getEmail(), dataStyle);
+                    createCell(row, 3, r.getPhone(), dataStyle);
+                    createCell(row, 4, r.getUserType(), dataStyle);
 
-                // --- LOGIC CHECK-IN MỚI ---
-                String checkInInfo;
-                if (r.getCheckinTime() != null) {
-                    // Lấy thời gian check-in (cắt bớt phần giây lẻ nếu muốn gọn)
-                    checkInInfo = "Đã check-in: " + r.getCheckinTime().toString().substring(0, 16);
-                } else {
-                    checkInInfo = "Chưa";
+                    // Tên hội thảo (đã được lấy từ JOIN trong Repository)
+                    createCell(row, 5, r.getEventName(), dataStyle);
+
+                    createCell(row, 6, r.isVip() ? "Có" : "Không", dataStyle);
+
+                    // Xử lý Check-in
+                    String checkInInfo = "Chưa";
+                    if (r.getCheckinTime() != null) {
+                        // Cắt chuỗi để lấy ngày giờ gọn gàng (yyyy-MM-dd HH:mm)
+                        String timeStr = r.getCheckinTime().toString();
+                        if (timeStr.length() > 16) timeStr = timeStr.substring(0, 16);
+                        checkInInfo = timeStr;
+                    }
+                    createCell(row, 7, checkInInfo, dataStyle);
+
+                    // Ngày đăng ký
+                    createCell(row, 8, (r.getRegisterDate() != null ? r.getRegisterDate().toString() : ""), dataStyle);
                 }
-                createCell(row, 7, checkInInfo, dataStyle);
-                // --------------------------
-
-                createCell(row, 8, (r.getRegisterDate() != null ? r.getRegisterDate().toString() : ""), dataStyle);
             }
 
+            // --- Auto Size cột ---
             for (int i = 0; i < columns.length; i++) {
                 sheet.autoSizeColumn(i);
+                // Cộng thêm chút chiều rộng cho thoáng
                 int currentWidth = sheet.getColumnWidth(i);
                 sheet.setColumnWidth(i, currentWidth + 1000);
             }
 
+            // --- Xuất file ra trình duyệt ---
             String fileName = "Danh_Sach_" + sheetName + ".xlsx";
             resp.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             resp.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");

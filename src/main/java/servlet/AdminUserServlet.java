@@ -11,7 +11,9 @@ import model.Register;
 import model.Seminar;
 import repository.RegisterRepository;
 import repositoryImpl.RegisterRepositoryImpl;
+import service.RegisterService;
 import service.SeminarService;
+import serviceImpl.RegisterServiceImpl;
 import serviceImpl.SeminarServiceImpl;
 import utils.EmailUtil; // Import gửi mail
 import utils.DataSourceUtil;
@@ -26,13 +28,13 @@ import java.util.UUID;
 @WebServlet("/admin-user")
 public class AdminUserServlet extends HttpServlet {
 
-    private RegisterRepository registerRepository;
+    private RegisterService registerService;
     private SeminarService seminarService;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         DataSource ds = DataSourceUtil.getDataSource();
-        this.registerRepository = new RegisterRepositoryImpl(ds);
+        this.registerService = new RegisterServiceImpl(ds);
         this.seminarService = new SeminarServiceImpl(ds);
     }
 
@@ -71,11 +73,11 @@ public class AdminUserServlet extends HttpServlet {
     private void deleteUser(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
             int id = Integer.parseInt(req.getParameter("id"));
-            Register old = registerRepository.findById(id);
+            Register old = registerService.findById(id);
             String typeRedirect = "environment";
             if (old != null) typeRedirect = getTypeBySeminarId(old.getSeminarId());
 
-            registerRepository.delete(id);
+            registerService.delete(id);
 
             // Redirect kèm msg
             String msg = URLEncoder.encode("Xóa thành công!", StandardCharsets.UTF_8);
@@ -112,7 +114,7 @@ public class AdminUserServlet extends HttpServlet {
             r.setCheckInId(checkInId);
 
             // 3. Lưu vào CSDL
-            Register created = registerRepository.create(r);
+            Register created = registerService.create(r);
 
             String typeRedirect = getTypeBySeminarId(seminarId);
 
@@ -178,7 +180,7 @@ public class AdminUserServlet extends HttpServlet {
         try {
             int id = Integer.parseInt(req.getParameter("id"));
             int seminarId = Integer.parseInt(req.getParameter("seminarId"));
-            Register r = registerRepository.findById(id);
+            Register r = registerService.findById(id);
 
             if (r != null) {
                 r.setName(req.getParameter("fullname"));
@@ -186,7 +188,7 @@ public class AdminUserServlet extends HttpServlet {
                 r.setPhone(req.getParameter("phone"));
                 r.setUserType(req.getParameter("type"));
                 r.setSeminarId(seminarId);
-                registerRepository.update(r);
+                registerService.update(r);
             }
 
             String typeRedirect = getTypeBySeminarId(seminarId);
@@ -207,10 +209,11 @@ public class AdminUserServlet extends HttpServlet {
 
     private void showEditForm(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         int id = Integer.parseInt(req.getParameter("id"));
-        Register r = registerRepository.findById(id);
+        Register r = registerService.findById(id);
         List<Seminar> seminars = seminarService.findAll();
         req.setAttribute("user", r);
         req.setAttribute("seminars", seminars);
         req.getRequestDispatcher("/admin-user-form.jsp").forward(req, resp);
     }
+
 }

@@ -222,26 +222,51 @@ public class RegisterRepositoryImpl implements RegisterRepository {
         r.setEmail(rs.getString("email"));
         r.setPhone(rs.getString("phone"));
         r.setUserType(rs.getString("user_type"));
-        try { r.setEventName(rs.getString("seminar_name")); } catch (Exception e) {}
+
+        try {
+            r.setEventName(rs.getString("seminar_name"));
+        } catch (Exception e) {
+            r.setEventName("Không xác định");
+        }
         return r;
     }
     @Override
-    public List<Register> findAllByCategoryId(int categoryId) {
+    public List<Register> findAllByCategoryId(int categoryId, int seminarIdFilter, int vipStatus) {
         List<Register> list = new ArrayList<>();
-        // SQL lấy tất cả người đăng ký thuộc category này (không có LIMIT/OFFSET)
-        String sql = "SELECT r.*, s.name as seminar_name " +
-                "FROM registrations r " +
-                "JOIN seminar s ON r.seminar_id = s.id " +
-                "WHERE s.category_id = ? " +
-                "ORDER BY r.register_date DESC";
 
-        try (Connection conn = DataSourceUtil.getDataSource().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        // JOIN bảng seminar để lấy tên hội thảo (s.name)
+        StringBuilder sql = new StringBuilder(
+                "SELECT r.*, s.name as seminar_name " +
+                        "FROM registrations r " +
+                        "JOIN seminar s ON r.seminar_id = s.id " +
+                        "WHERE s.category_id = ? "
+        );
 
-            ps.setInt(1, categoryId);
+        // Logic Lọc động
+        if (seminarIdFilter > 0) {
+            sql.append(" AND r.seminar_id = ? ");
+        }
+        if (vipStatus != -1) {
+            sql.append(" AND r.is_vip = ? ");
+        }
+
+        sql.append(" ORDER BY r.register_date DESC");
+
+        try (Connection conn = ds.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int index = 1;
+            ps.setInt(index++, categoryId);
+
+            if (seminarIdFilter > 0) {
+                ps.setInt(index++, seminarIdFilter);
+            }
+            if (vipStatus != -1) {
+                ps.setBoolean(index++, vipStatus == 1);
+            }
+
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                // Tái sử dụng hàm mapRow để lấy dữ liệu chuẩn
                 list.add(mapRow(rs));
             }
         } catch (SQLException e) {

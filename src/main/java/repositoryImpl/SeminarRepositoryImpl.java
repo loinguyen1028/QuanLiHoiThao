@@ -321,4 +321,5 @@ public class SeminarRepositoryImpl implements SeminarRepository {
         }
         return 0;
     }
+
 }
