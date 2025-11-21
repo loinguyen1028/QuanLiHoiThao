@@ -5,184 +5,247 @@
 <jsp:include page="admin-header.jsp" />
 
 <%
+    // --- LẤY DỮ LIỆU TỪ SERVLET ---
     List<Register> list = (List<Register>) request.getAttribute("list");
-    List<Seminar> seminars = (List<Seminar>) request.getAttribute("seminars"); // Lấy danh sách hội thảo để tạo dropdown
+    List<Seminar> seminars = (List<Seminar>) request.getAttribute("seminars");
     String categoryName = (String) request.getAttribute("categoryName");
     String type = (String) request.getAttribute("type");
 
-    // Lấy lại trạng thái lọc
+    // Lấy lại trạng thái các bộ lọc để hiển thị (selected)
+    int currentSid = (request.getAttribute("currentSeminarId") != null) ? (Integer) request.getAttribute("currentSeminarId") : 0;
     int vipStatus = (request.getAttribute("vipStatus") != null) ? (Integer) request.getAttribute("vipStatus") : -1;
-    int currentSid = (request.getAttribute("currentSeminarId") != null) ? (Integer) request.getAttribute("currentSeminarId") : 0; // Lọc theo SeminarID
-
-    // Code cũ của bạn (Checkin, UserType, Keyword) - Nếu Servlet chưa gửi thì để mặc định
     int checkInStatus = (request.getAttribute("checkInStatus") != null) ? (Integer) request.getAttribute("checkInStatus") : -1;
-    String userType = (String) request.getAttribute("userType");
+
+    String userType = request.getParameter("userType");
     if(userType == null) userType = "";
-    String keyword = (String) request.getAttribute("keyword");
+
+    String keyword = request.getParameter("keyword");
     if(keyword == null) keyword = "";
 
-    // Tạo chuỗi params để giữ bộ lọc khi phân trang
+    // Tính toán phân trang
+    Integer currentPageObj = (Integer) request.getAttribute("currentPage");
+    Integer totalPagesObj = (Integer) request.getAttribute("totalPages");
+    int currentPage = (currentPageObj != null) ? currentPageObj : 1;
+    int totalPages = (totalPagesObj != null) ? totalPagesObj : 1;
+
+    // Tạo chuỗi query params để giữ bộ lọc khi bấm chuyển trang
     StringBuilder params = new StringBuilder();
     params.append("&vipStatus=").append(vipStatus);
     params.append("&seminarId=").append(currentSid);
-    // params.append("&checkInStatus=").append(checkInStatus); // Bỏ comment nếu Servlet hỗ trợ
-    // params.append("&userType=").append(URLEncoder.encode(userType, StandardCharsets.UTF_8)); // Bỏ comment nếu Servlet hỗ trợ
-    // params.append("&keyword=").append(URLEncoder.encode(keyword, StandardCharsets.UTF_8));   // Bỏ comment nếu Servlet hỗ trợ
+    params.append("&checkInStatus=").append(checkInStatus);
+    if(!userType.isEmpty()) params.append("&userType=").append(URLEncoder.encode(userType, StandardCharsets.UTF_8));
+    if(!keyword.isEmpty()) params.append("&keyword=").append(URLEncoder.encode(keyword, StandardCharsets.UTF_8));
     String queryParams = params.toString();
 %>
 
 <style>
-    body { font-family: 'Nunito', sans-serif; letter-spacing: 0.5px; }
-    .table { font-size: 0.9rem; }
-    table th, table td { vertical-align: middle !important; padding: 10px 12px !important; }
-    .table-primary th { font-weight: 700; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px;}
-    .btn-rounded { border-radius: 20px !important; font-weight: 600; font-size: 0.85rem; }
-    .card-rounded { border-radius: 15px !important; overflow: hidden !important; }
-    .filter-active { color: #f6c23e !important; }
-    .badge-soft { background-color: rgba(78,115,223,0.1); color: #4e73df; border: 1px solid rgba(78,115,223,0.2); }
+    /* CSS TÙY CHỈNH CHO GIAO DIỆN ĐẸP */
+    body { font-family: 'Nunito', sans-serif; background-color: #f8f9fc; }
+
+    /* Thanh công cụ lọc */
+    .filter-bar {
+        background: white;
+        padding: 15px 20px;
+        border-radius: 15px;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+        margin-bottom: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .filter-input {
+        border-radius: 20px;
+        border: 1px solid #d1d3e2;
+        font-size: 0.9rem;
+        padding: 0.375rem 1rem;
+        min-width: 150px;
+    }
+
+    .filter-input:focus {
+        box-shadow: none;
+        border-color: #4e73df;
+    }
+
+    /* Nút bấm */
+    .btn-custom { border-radius: 20px; font-weight: 600; font-size: 0.9rem; padding: 6px 20px; transition: 0.2s; }
+    .btn-search { background: #4e73df; color: white; border: none; }
+    .btn-search:hover { background: #2e59d9; color: white; transform: translateY(-1px); }
+    .btn-excel { background: #1cc88a; color: white; border: none; }
+    .btn-excel:hover { background: #17a673; color: white; transform: translateY(-1px); }
+
+    /* Bảng */
+    .table-card { border-radius: 15px; overflow: hidden; border: none; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1); }
+    .table thead th {
+        background-color: #f8f9fc;
+        color: #4e73df;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        border-bottom: 2px solid #e3e6f0;
+        vertical-align: middle;
+    }
+    .table td { vertical-align: middle; font-size: 0.9rem; padding: 12px; }
+
+    /* Badges */
+    .badge-vip { background-color: #f6c23e; color: white; padding: 5px 10px; border-radius: 10px; font-size: 0.75rem; }
+    .badge-normal { background-color: #eaecf4; color: #858796; padding: 5px 10px; border-radius: 10px; font-size: 0.75rem; }
+    .badge-checked { background-color: #1cc88a; color: white; }
+    .badge-pending { background-color: #e74a3b; color: white; }
 </style>
 
 <div class="container-fluid">
 
-    <%-- THÔNG BÁO --%>
-    <% String msg = request.getParameter("msg"); if (msg != null && !msg.isEmpty()) { %>
-    <div class="alert alert-success alert-dismissible fade show mt-3 shadow-sm" role="alert" style="border-radius: 10px;">
-        <i class="fas fa-check-circle me-2"></i> <%= msg %>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <%-- HIỂN THỊ THÔNG BÁO --%>
+    <% String msg = request.getParameter("msg");
+        String error = request.getParameter("error");
+        if (msg != null && !msg.isEmpty()) { %>
+    <div class="alert <%= (error != null) ? "alert-danger" : "alert-success" %> alert-dismissible fade show mt-3 shadow-sm" role="alert" style="border-radius: 10px;">
+        <i class="fas <%= (error != null) ? "fa-exclamation-triangle" : "fa-check-circle" %> me-2"></i> <%= msg %>
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
     </div>
     <% } %>
 
-    <div class="d-flex justify-content-between align-items-center mb-4 mt-4 flex-wrap">
-        <div>
-            <h4 class="text-gray-800 m-0 font-weight-bold">Quản lí đăng ký – <span class="text-primary"><%= categoryName %></span></h4>
-        </div>
-
-        <div class="d-flex align-items-center gap-2">
-            <form action="list-user" method="GET" class="d-inline-block me-2">
-                <input type="hidden" name="type" value="<%= type %>">
-                <input type="hidden" name="vipStatus" value="<%= vipStatus %>">
-
-                <select name="seminarId" class="form-select form-select-sm shadow-sm border-primary"
-                        style="border-radius: 20px; min-width: 220px; font-weight: 500;"
-                        onchange="this.form.submit()">
-                    <option value="0">📂 Tất cả Hội thảo</option>
-                    <% if (seminars != null) {
-                        for (Seminar s : seminars) { %>
-                    <option value="<%= s.getId() %>" <%= s.getId() == currentSid ? "selected" : "" %>>
-                        <%= s.getName() %>
-                    </option>
-                    <%   }
-                    } %>
-                </select>
-            </form>
-
-            <a href="export-excel?type=<%= type %>&seminarId=<%= currentSid %>" class="btn btn-success btn-rounded btn-sm shadow-sm">
-                <i class="fas fa-file-excel"></i> Excel
-            </a>
-            <a href="admin-user?action=add" class="btn btn-primary btn-rounded btn-sm shadow-sm">
-                <i class="fas fa-plus"></i> Thêm
-            </a>
-        </div>
+    <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+        <h1 class="h3 mb-0 text-gray-800">Quản lý đăng ký – <span class="text-primary"><%= categoryName %></span></h1>
     </div>
 
-    <div class="card shadow-sm border-0 card-rounded">
-        <div class="card-header bg-white py-3 border-bottom">
-            <h6 class="m-0 font-weight-bold text-primary text-uppercase">Danh sách người đăng ký</h6>
+    <form id="filterForm" action="list-user" method="GET" class="filter-bar">
+        <input type="hidden" name="type" value="<%= type %>">
+
+        <div class="input-group" style="width: 250px;">
+            <input type="text" name="keyword" class="form-control filter-input" placeholder="Tìm tên, email, SĐT..." value="<%= keyword %>">
         </div>
 
+        <select name="seminarId" class="form-select filter-input" onchange="submitForm()">
+            <option value="0">📂 Tất cả Hội thảo</option>
+            <% if (seminars != null) {
+                for (Seminar s : seminars) { %>
+            <option value="<%= s.getId() %>" <%= s.getId() == currentSid ? "selected" : "" %>>
+                <%= s.getName() %>
+            </option>
+            <%   } } %>
+        </select>
+
+        <select name="userType" class="form-select filter-input" onchange="submitForm()">
+            <option value="">👤 Tất cả Khách</option>
+            <option value="Sinh viên" <%= "Sinh viên".equals(userType) ? "selected" : "" %>>Sinh viên</option>
+            <option value="Giảng viên" <%= "Giảng viên".equals(userType) ? "selected" : "" %>>Giảng viên</option>
+            <option value="Khách tự do" <%= "Khách tự do".equals(userType) ? "selected" : "" %>>Khách tự do</option>
+        </select>
+
+        <select name="vipStatus" class="form-select filter-input" style="width: 130px;" onchange="submitForm()">
+            <option value="-1">⭐ Tất cả</option>
+            <option value="1" <%= vipStatus == 1 ? "selected" : "" %>>VIP</option>
+            <option value="0" <%= vipStatus == 0 ? "selected" : "" %>>Thường</option>
+        </select>
+
+        <select name="checkInStatus" class="form-select filter-input" style="width: 150px;" onchange="submitForm()">
+            <option value="-1">📍 Check-in</option>
+            <option value="1" <%= checkInStatus == 1 ? "selected" : "" %>>Đã Check-in</option>
+            <option value="0" <%= checkInStatus == 0 ? "selected" : "" %>>Chưa</option>
+        </select>
+
+        <button type="submit" class="btn btn-custom btn-search"><i class="fas fa-search"></i></button>
+        <a href="list-user?type=<%= type %>" class="btn btn-light btn-custom" title="Xóa bộ lọc"><i class="fas fa-sync-alt"></i></a>
+
+        <div class="ml-auto d-flex gap-2">
+            <button type="button" onclick="exportExcel()" class="btn btn-custom btn-excel shadow-sm">
+                <i class="fas fa-file-excel"></i> Xuất Excel
+            </button>
+
+            <a href="admin-user?action=add" class="btn btn-primary btn-custom shadow-sm">
+                <i class="fas fa-plus"></i> Thêm Mới
+            </a>
+        </div>
+    </form>
+
+    <div class="card table-card mb-4">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="bg-light text-center text-nowrap text-secondary">
+                <table class="table table-hover mb-0" width="100%">
+                    <thead>
                     <tr>
-                        <th>ID</th>
-                        <th class="text-start">Họ và tên</th>
-                        <th class="text-start">Email</th>
-                        <th>SĐT</th>
-                        <th>Loại khách</th>
-
-                        <th class="text-start" style="width: 25%;">Tên Hội thảo</th>
-
-                        <th class="text-center" style="min-width: 90px;">
-                            <div class="dropdown">
-                                <a class="dropdown-toggle text-secondary text-decoration-none font-weight-bold" href="#" data-toggle="dropdown">
-                                    VIP <% if(vipStatus != -1){ %><i class="fas fa-filter fa-xs filter-active"></i><% } %>
-                                </a>
-                                <div class="dropdown-menu shadow border-0">
-                                    <a class="dropdown-item <%= vipStatus == -1 ? "active" : "" %>" href="list-user?type=<%=type%>&vipStatus=-1&seminarId=<%=currentSid%>">Tất cả</a>
-                                    <a class="dropdown-item <%= vipStatus == 1 ? "active" : "" %>" href="list-user?type=<%=type%>&vipStatus=1&seminarId=<%=currentSid%>">⭐ VIP</a>
-                                    <a class="dropdown-item <%= vipStatus == 0 ? "active" : "" %>" href="list-user?type=<%=type%>&vipStatus=0&seminarId=<%=currentSid%>">👤 Thường</a>
-                                </div>
-                            </div>
-                        </th>
-
-                        <th>Hành động</th>
+                        <th class="text-center">ID</th>
+                        <th>Họ và tên</th>
+                        <th>Email / SĐT</th>
+                        <th class="text-center">Loại khách</th>
+                        <th>Hội thảo đăng ký</th>
+                        <th class="text-center">VIP</th>
+                        <th class="text-center">Check-in</th>
+                        <th class="text-center">Hành động</th>
                     </tr>
                     </thead>
-
                     <tbody>
                     <% if (list != null && !list.isEmpty()) {
                         for (Register r : list) { %>
                     <tr>
-                        <td class="text-center text-muted"><%= r.getId() %></td>
-                        <td class="fw-bold text-dark"><%= r.getName() %></td>
-                        <td class="text-muted"><%= r.getEmail() %></td>
-                        <td class="text-center"><%= r.getPhone() %></td>
+                        <td class="text-center text-muted">#<%= r.getId() %></td>
 
-                        <td class="text-center">
-                            <span class="badge badge-soft rounded-pill px-3">
-                                <%= r.getUserType() %>
-                            </span>
+                        <td>
+                            <div class="font-weight-bold text-primary"><%= r.getName() %></div>
+                            <small class="text-muted">Mã: <%= r.getRegistrationCode() %></small>
                         </td>
 
                         <td>
-                            <div class="text-truncate" style="max-width: 250px;" title="<%= r.getEventName() %>">
-                                <%= r.getEventName() %>
-                            </div>
+                            <div><i class="fas fa-envelope fa-xs text-gray-400 mr-1"></i> <%= r.getEmail() %></div>
+                            <div><i class="fas fa-phone fa-xs text-gray-400 mr-1"></i> <%= r.getPhone() %></div>
                         </td>
 
                         <td class="text-center">
-                            <a href="toggle-vip?id=<%= r.getId() %>" class="btn btn-sm <%= r.isVip() ? "btn-warning text-white" : "btn-light text-secondary" %> rounded-circle shadow-sm"
-                               style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;">
-                                <i class="<%= r.isVip() ? "fas" : "far" %> fa-star"></i>
+                            <span class="badge bg-light text-dark border"><%= r.getUserType() %></span>
+                        </td>
+
+                        <td style="max-width: 250px;">
+                            <div class="text-truncate" title="<%= r.getEventName() %>"><%= r.getEventName() %></div>
+                        </td>
+
+                        <td class="text-center">
+                            <a href="toggle-vip?id=<%= r.getId() %>" class="text-decoration-none">
+                                <% if(r.isVip()) { %>
+                                <span class="badge badge-vip"><i class="fas fa-star"></i> VIP</span>
+                                <% } else { %>
+                                <i class="far fa-star text-gray-400"></i>
+                                <% } %>
                             </a>
                         </td>
 
-                        <td class="text-center text-nowrap">
-                            <a href="admin-user?action=edit&id=<%= r.getId() %>" class="btn btn-sm btn-outline-info border-0" title="Sửa"><i class="fas fa-edit"></i></a>
-                            <a href="admin-user?action=delete&id=<%= r.getId() %>" class="btn btn-sm btn-outline-danger border-0" onclick="return confirm('Xóa người này?');" title="Xóa"><i class="fas fa-trash-alt"></i></a>
+                        <td class="text-center">
+                            <% if (r.getCheckinTime() != null) { %>
+                            <span class="badge badge-checked" title="<%= r.getCheckinTime() %>"><i class="fas fa-check"></i> Rồi</span>
+                            <% } else { %>
+                            <span class="badge badge-pending">Chưa</span>
+                            <% } %>
+                        </td>
+
+                        <td class="text-center">
+                            <a href="admin-user?action=edit&id=<%= r.getId() %>" class="btn btn-sm btn-info shadow-sm"><i class="fas fa-pen"></i></a>
+                            <a href="admin-user?action=delete&id=<%= r.getId() %>" class="btn btn-sm btn-danger shadow-sm" onclick="return confirm('Xóa đăng ký này?');"><i class="fas fa-trash"></i></a>
                         </td>
                     </tr>
                     <% } } else { %>
-                    <tr><td colspan="9" class="text-center py-5 text-muted bg-light"><i class="fas fa-inbox fa-3x mb-3 text-gray-300"></i><br>Không tìm thấy dữ liệu nào</td></tr>
+                    <tr><td colspan="8" class="text-center py-5 text-muted"><i class="fas fa-folder-open fa-3x mb-3"></i><br>Không tìm thấy dữ liệu phù hợp</td></tr>
                     <% } %>
                     </tbody>
                 </table>
             </div>
 
-            <%-- PHÂN TRANG --%>
-            <%
-                // (Code phân trang giữ nguyên như cũ)
-                Integer currentPageObj = (Integer) request.getAttribute("currentPage"); // Đảm bảo Servlet gửi đúng tên biến này
-                Integer totalPagesObj = (Integer) request.getAttribute("totalPages");
-                int currentPage = (currentPageObj != null) ? currentPageObj : 1;
-                int totalPages = (totalPagesObj != null) ? totalPagesObj : 1;
-            %>
             <% if (totalPages > 1) { %>
-            <div class="p-3 border-top">
-                <nav aria-label="Page navigation">
-                    <ul class="pagination justify-content-center m-0">
+            <div class="d-flex justify-content-center py-3">
+                <nav>
+                    <ul class="pagination m-0">
                         <li class="page-item <%= (currentPage == 1) ? "disabled" : "" %>">
-                            <a class="page-link rounded-pill px-3 me-1" href="list-user?type=<%=type%>&page=<%= currentPage - 1 %><%= queryParams %>">Trước</a>
+                            <a class="page-link rounded-pill px-3 mr-1" href="list-user?type=<%=type%>&page=<%= currentPage - 1 %><%= queryParams %>">Trước</a>
                         </li>
                         <% for (int i = 1; i <= totalPages; i++) { %>
                         <li class="page-item <%= (i == currentPage) ? "active" : "" %>">
-                            <a class="page-link rounded-circle mx-1" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;"
+                            <a class="page-link rounded-circle mx-1" style="width: 35px; height: 35px; display:flex; align-items:center; justify-content:center;"
                                href="list-user?type=<%=type%>&page=<%= i %><%= queryParams %>"><%= i %></a>
                         </li>
                         <% } %>
                         <li class="page-item <%= (currentPage == totalPages) ? "disabled" : "" %>">
-                            <a class="page-link rounded-pill px-3 ms-1" href="list-user?type=<%=type%>&page=<%= currentPage + 1 %><%= queryParams %>">Sau</a>
+                            <a class="page-link rounded-pill px-3 ml-1" href="list-user?type=<%=type%>&page=<%= currentPage + 1 %><%= queryParams %>">Sau</a>
                         </li>
                     </ul>
                 </nav>
@@ -191,5 +254,22 @@
         </div>
     </div>
 </div>
+
+<script>
+    function submitForm() {
+        document.getElementById("filterForm").submit();
+    }
+
+    function exportExcel() {
+        // Lấy form
+        var form = document.getElementById("filterForm");
+
+        // Tạo URL export dựa trên dữ liệu trong form
+        var params = new URLSearchParams(new FormData(form)).toString();
+
+        // Chuyển hướng sang Servlet Export
+        window.location.href = "export-excel?" + params;
+    }
+</script>
 
 <jsp:include page="admin-footer.jsp" />

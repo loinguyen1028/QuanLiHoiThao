@@ -231,11 +231,11 @@ public class RegisterRepositoryImpl implements RegisterRepository {
         return r;
     }
     @Override
-    public List<Register> findAllByCategoryId(int categoryId, int seminarIdFilter, int vipStatus, int page, int pageSize) {
+    public List<Register> findAllByCategoryId(int categoryId, int seminarIdFilter, int vipStatus, String userType, int checkInStatus, int page, int pageSize) {
         List<Register> list = new ArrayList<>();
         List<Object> params = new ArrayList<>();
 
-        // 1. Xây dựng SQL Cơ bản (JOIN bảng seminar)
+        // SQL Cơ bản
         StringBuilder sql = new StringBuilder(
                 "SELECT r.*, s.name as seminar_name " +
                         "FROM registrations r " +
@@ -244,7 +244,7 @@ public class RegisterRepositoryImpl implements RegisterRepository {
         );
         params.add(categoryId);
 
-        // 2. Thêm điều kiện Lọc
+        // --- CÁC BỘ LỌC ---
         if (seminarIdFilter > 0) {
             sql.append(" AND r.seminar_id = ? ");
             params.add(seminarIdFilter);
@@ -253,8 +253,23 @@ public class RegisterRepositoryImpl implements RegisterRepository {
             sql.append(" AND r.is_vip = ? ");
             params.add(vipStatus == 1);
         }
+        if (userType != null && !userType.isEmpty()) {
+            sql.append(" AND r.user_type = ? ");
+            params.add(userType);
+        }
 
-        // 3. Thêm Sắp xếp và Phân trang
+        // 🔥 [MỚI] Lọc theo Check-in
+        if (checkInStatus != -1) {
+            if (checkInStatus == 1) {
+                // Đã check-in: checkin_time KHÔNG NULL
+                sql.append(" AND r.checkin_time IS NOT NULL ");
+            } else {
+                // Chưa check-in: checkin_time LÀ NULL
+                sql.append(" AND r.checkin_time IS NULL ");
+            }
+        }
+
+        // Sắp xếp và Phân trang
         sql.append(" ORDER BY r.register_date DESC LIMIT ? OFFSET ?");
         params.add(pageSize);
         params.add((page - 1) * pageSize);
@@ -262,7 +277,6 @@ public class RegisterRepositoryImpl implements RegisterRepository {
         try (Connection conn = DataSourceUtil.getDataSource().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
-            // Set tham số động
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }

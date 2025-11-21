@@ -33,7 +33,7 @@ public class ExportExcelServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
-        // 1. Xử lý tham số loại danh mục
+        // --- 1. Lấy các tham số lọc giống hệt ListSeminarServlet ---
         String type = req.getParameter("type");
         if (type == null) type = "environment";
 
@@ -46,29 +46,43 @@ public class ExportExcelServlet extends HttpServlet {
             default:           categoryId = 1; sheetName = "MoiTruong"; break;
         }
 
-        // 2. Lấy tham số lọc (Seminar ID)
         int seminarIdFilter = 0;
         try {
             String sId = req.getParameter("seminarId");
-            if (sId != null && !sId.isEmpty()) {
-                seminarIdFilter = Integer.parseInt(sId);
-            }
-        } catch (NumberFormatException e) {
-            seminarIdFilter = 0;
-        }
+            if (sId != null && !sId.isEmpty()) seminarIdFilter = Integer.parseInt(sId);
+        } catch (NumberFormatException e) {}
 
-        // 3. SỬA LỖI Ở ĐÂY: Gọi Service với tham số Phân trang "Giả"
-        // Vì hàm findAllByCategoryId yêu cầu page và pageSize
-        // Để lấy HẾT dữ liệu cho Excel, ta truyền:
-        // page = 1
-        // pageSize = Integer.MAX_VALUE (Lấy số lượng tối đa có thể)
-        List<Register> list = registerService.findAllByCategoryId(categoryId, seminarIdFilter, -1, 1, Integer.MAX_VALUE);
+        int vipStatus = -1;
+        try {
+            String vId = req.getParameter("vipStatus");
+            if (vId != null && !vId.isEmpty()) vipStatus = Integer.parseInt(vId);
+        } catch (Exception e) {}
 
-        // 4. Tạo File Excel
+        String userType = req.getParameter("userType");
+        if (userType == null) userType = "";
+
+        int checkInStatus = -1;
+        try {
+            String cId = req.getParameter("checkInStatus");
+            if (cId != null && !cId.isEmpty()) checkInStatus = Integer.parseInt(cId);
+        } catch (Exception e) {}
+
+        // --- 2. Gọi Service lấy TẤT CẢ dữ liệu (pageSize = MAX_VALUE) ---
+        List<Register> list = registerService.findAllByCategoryId(
+                categoryId,
+                seminarIdFilter,
+                vipStatus,
+                userType,
+                checkInStatus,
+                1,
+                Integer.MAX_VALUE // Lấy hết không phân trang
+        );
+
+        // --- 3. Tạo File Excel ---
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet(sheetName);
 
-            // --- Style Header ---
+            // Style Header
             CellStyle headerStyle = workbook.createCellStyle();
             Font font = workbook.createFont();
             font.setBold(true);
@@ -80,12 +94,12 @@ public class ExportExcelServlet extends HttpServlet {
             headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             setBorder(headerStyle);
 
-            // --- Style Data ---
+            // Style Data
             CellStyle dataStyle = workbook.createCellStyle();
             setBorder(dataStyle);
             dataStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 
-            // --- Tạo Tiêu đề Cột ---
+            // Tạo Tiêu đề Cột
             Row headerRow = sheet.createRow(0);
             headerRow.setHeightInPoints(30);
             String[] columns = {
@@ -99,7 +113,7 @@ public class ExportExcelServlet extends HttpServlet {
                 cell.setCellStyle(headerStyle);
             }
 
-            // --- Đổ dữ liệu vào dòng ---
+            // Đổ dữ liệu
             int rowNum = 1;
             if (list != null) {
                 for (Register r : list) {
@@ -110,10 +124,10 @@ public class ExportExcelServlet extends HttpServlet {
                     createCell(row, 2, r.getEmail(), dataStyle);
                     createCell(row, 3, r.getPhone(), dataStyle);
                     createCell(row, 4, r.getUserType(), dataStyle);
-                    createCell(row, 5, r.getEventName(), dataStyle); // Tên hội thảo
+                    createCell(row, 5, r.getEventName(), dataStyle);
                     createCell(row, 6, r.isVip() ? "Có" : "Không", dataStyle);
 
-                    // Xử lý Check-in
+                    // Xử lý Check-in text
                     String checkInInfo = "Chưa";
                     if (r.getCheckinTime() != null) {
                         String timeStr = r.getCheckinTime().toString();
@@ -127,14 +141,14 @@ public class ExportExcelServlet extends HttpServlet {
                 }
             }
 
-            // --- Auto Size cột ---
+            // Auto Size cột
             for (int i = 0; i < columns.length; i++) {
                 sheet.autoSizeColumn(i);
                 int currentWidth = sheet.getColumnWidth(i);
                 sheet.setColumnWidth(i, currentWidth + 1000);
             }
 
-            // --- Xuất file ---
+            // Xuất file
             String fileName = "Danh_Sach_" + sheetName + ".xlsx";
             resp.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             resp.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");

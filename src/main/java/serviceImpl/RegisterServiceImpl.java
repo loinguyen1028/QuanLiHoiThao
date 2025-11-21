@@ -45,8 +45,8 @@ public class RegisterServiceImpl implements RegisterService {
     }
 
     @Override
-    public List<Register> findAllByCategoryId(int categoryId, int seminarIdFilter, int vipStatus, int page, int pageSize) {
-        return registerRepository.findAllByCategoryId(categoryId, seminarIdFilter, vipStatus, page, pageSize);
+    public List<Register> findAllByCategoryId(int categoryId, int seminarIdFilter, int vipStatus, String userType, int checkInStatus, int page, int pageSize) {
+        return registerRepository.findAllByCategoryId(categoryId, seminarIdFilter, vipStatus, userType, checkInStatus, page, pageSize);
     }
 
     @Override
