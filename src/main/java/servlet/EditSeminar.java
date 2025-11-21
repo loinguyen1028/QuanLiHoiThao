@@ -111,7 +111,7 @@ public class EditSeminar extends HttpServlet {
 
             // Kiểm tra nếu người dùng có upload ảnh mới
             if (imagePart != null && imagePart.getSize() > 0 && imagePart.getSubmittedFileName() != null && !imagePart.getSubmittedFileName().isEmpty()) {
-                String appPath = "D:/";
+                String appPath = "C:/";
                 imagePath = FileUploadUtil.uploadImageReturnPath(imagePart, "banner", appPath);
             }
             Seminar seminar = new Seminar( id, name, description, newStartDate, endDate, location, speaker,

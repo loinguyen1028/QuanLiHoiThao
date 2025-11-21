@@ -16,7 +16,7 @@ import java.net.URLDecoder;
 public class StaticResourceServlet extends HttpServlet {
 
     // Đường dẫn gốc nơi bạn lưu file (phải khớp với UploadImageServlet)
-    private static final String BASE_DIR = "D:/img";
+    private static final String BASE_DIR = "C:/img";
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
