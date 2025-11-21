@@ -231,38 +231,40 @@ public class RegisterRepositoryImpl implements RegisterRepository {
         return r;
     }
     @Override
-    public List<Register> findAllByCategoryId(int categoryId, int seminarIdFilter, int vipStatus) {
+    public List<Register> findAllByCategoryId(int categoryId, int seminarIdFilter, int vipStatus, int page, int pageSize) {
         List<Register> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
 
-        // JOIN bảng seminar để lấy tên hội thảo (s.name)
+        // 1. Xây dựng SQL Cơ bản (JOIN bảng seminar)
         StringBuilder sql = new StringBuilder(
                 "SELECT r.*, s.name as seminar_name " +
                         "FROM registrations r " +
                         "JOIN seminar s ON r.seminar_id = s.id " +
                         "WHERE s.category_id = ? "
         );
+        params.add(categoryId);
 
-        // Logic Lọc động
+        // 2. Thêm điều kiện Lọc
         if (seminarIdFilter > 0) {
             sql.append(" AND r.seminar_id = ? ");
+            params.add(seminarIdFilter);
         }
         if (vipStatus != -1) {
             sql.append(" AND r.is_vip = ? ");
+            params.add(vipStatus == 1);
         }
 
-        sql.append(" ORDER BY r.register_date DESC");
+        // 3. Thêm Sắp xếp và Phân trang
+        sql.append(" ORDER BY r.register_date DESC LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add((page - 1) * pageSize);
 
-        try (Connection conn = ds.getConnection();
+        try (Connection conn = DataSourceUtil.getDataSource().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
-            int index = 1;
-            ps.setInt(index++, categoryId);
-
-            if (seminarIdFilter > 0) {
-                ps.setInt(index++, seminarIdFilter);
-            }
-            if (vipStatus != -1) {
-                ps.setBoolean(index++, vipStatus == 1);
+            // Set tham số động
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
             }
 
             ResultSet rs = ps.executeQuery();
@@ -273,6 +275,36 @@ public class RegisterRepositoryImpl implements RegisterRepository {
             e.printStackTrace();
         }
         return list;
+    }
+
+    @Override
+    public int countByFilter(int categoryId, int seminarIdFilter, int vipStatus) {
+        List<Object> params = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM registrations r JOIN seminar s ON r.seminar_id = s.id WHERE s.category_id = ?"
+        );
+        params.add(categoryId);
+
+        if (seminarIdFilter > 0) {
+            sql.append(" AND r.seminar_id = ?");
+            params.add(seminarIdFilter);
+        }
+        if (vipStatus != -1) {
+            sql.append(" AND r.is_vip = ?");
+            params.add(vipStatus == 1);
+        }
+
+        try (Connection conn = DataSourceUtil.getDataSource().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
     @Override public List<Register> findAll() { return List.of(); }

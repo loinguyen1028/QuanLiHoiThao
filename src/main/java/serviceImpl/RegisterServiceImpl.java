@@ -43,9 +43,15 @@ public class RegisterServiceImpl implements RegisterService {
     public boolean checkInUser(String checkInId) {
         return registerRepository.setCheckInTime(checkInId);
     }
+
     @Override
-    public List<Register> findAllByCategoryId(int categoryId,int seminarIdFilter, int vipStatus) {
-        return registerRepository.findAllByCategoryId(categoryId, seminarIdFilter, vipStatus);
+    public List<Register> findAllByCategoryId(int categoryId, int seminarIdFilter, int vipStatus, int page, int pageSize) {
+        return registerRepository.findAllByCategoryId(categoryId, seminarIdFilter, vipStatus, page, pageSize);
+    }
+
+    @Override
+    public int countByFilter(int categoryId, int seminarIdFilter, int vipStatus) {
+        return registerRepository.countByFilter(categoryId, seminarIdFilter, vipStatus);
     }
 
     @Override

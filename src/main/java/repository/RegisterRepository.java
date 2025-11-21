@@ -21,6 +21,6 @@ public interface RegisterRepository extends Repository<Register> {
     Register findByCheckInId(String checkInId);
     boolean setCheckInTime(String checkInId);
 
-    List<Register> findAllByCategoryId(int categoryId, int seminarIdFilter, int vipStatus);
-
+    List<Register> findAllByCategoryId(int categoryId, int seminarIdFilter, int vipStatus, int page, int pageSize);
+    int countByFilter(int categoryId, int seminarIdFilter, int vipStatus);
 }

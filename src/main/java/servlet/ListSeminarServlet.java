@@ -66,9 +66,17 @@ public class ListSeminarServlet extends HttpServlet {
                 if (vId != null && !vId.isEmpty()) vipStatus = Integer.parseInt(vId);
             } catch (Exception e) {}
 
-            // 4. Gọi Service
-            // Lấy danh sách người đăng ký (đã lọc)
-            List<Register> list = registerService.findAllByCategoryId(categoryId, seminarIdFilter, vipStatus);
+            int page = 1;
+            int pageSize = 10; // Số lượng mỗi trang
+            try {
+                String p = req.getParameter("page");
+                if (p != null) page = Integer.parseInt(p);
+            } catch (Exception e) {}
+
+            int totalRecords = registerService.countByFilter(categoryId, seminarIdFilter, vipStatus);
+            int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
+
+            List<Register> list = registerService.findAllByCategoryId(categoryId, seminarIdFilter, vipStatus, page, pageSize);
 
             // Lấy danh sách hội thảo (để đổ vào dropdown lọc)
             List<Seminar> seminars = seminarService.findByCategoryId(categoryId);
@@ -79,9 +87,12 @@ public class ListSeminarServlet extends HttpServlet {
             req.setAttribute("categoryName", categoryName);
             req.setAttribute("type", type);
 
-            // Giữ lại trạng thái đã chọn
             req.setAttribute("currentSeminarId", seminarIdFilter);
             req.setAttribute("vipStatus", vipStatus);
+
+            // Gửi thông tin phân trang
+            req.setAttribute("currentPage", page);
+            req.setAttribute("totalPages", totalPages);
 
             req.getRequestDispatcher("list-user.jsp").forward(req, resp);
 
