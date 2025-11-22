@@ -104,7 +104,7 @@ public class RegisterDAO {
         return 0;
     }
 
-    // --- CÁC HÀM CŨ GIỮ NGUYÊN ---
+
     public boolean insert(Register r) {
         String sql = "INSERT INTO registrations (seminar_id, name, email, phone, user_type) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DataSourceUtil.getDataSource().getConnection();

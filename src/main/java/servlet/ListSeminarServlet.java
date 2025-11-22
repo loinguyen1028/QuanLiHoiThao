@@ -86,7 +86,7 @@ public class ListSeminarServlet extends HttpServlet {
                     default:
                         categoryId = 1;
                         categoryName = "Hội thảo môi trường";
-                        type = "environment"; // Chuẩn hóa lại
+                        type = "environment";
                         break;
                 }
             }

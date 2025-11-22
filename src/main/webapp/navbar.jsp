@@ -55,7 +55,7 @@
 <div class="container-fluid sticky-top">
     <div class="container">
         <nav class="navbar navbar-expand-lg navbar-light border-bottom border-2 border-white">
-            <a href="<%= ctx %>/home.jsp" class="navbar-brand">
+            <a href="<%= ctx %>" class="navbar-brand">
                 <img src="<%= ctx %>/img/logo8.png" alt="Logo">
             </a>
 
@@ -67,7 +67,6 @@
 
             <div class="collapse navbar-collapse" id="navbarCollapse">
                 <div class="navbar-nav ms-auto">
-                    <a href="<%= ctx %>/home.jsp" class="nav-item nav-link active">Trang Chủ</a>
 
                     <!-- Dropdown Danh Mục Hội Thảo -->
                     <div class="nav-item dropdown">
