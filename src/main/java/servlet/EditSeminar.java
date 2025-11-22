@@ -101,20 +101,45 @@ public class EditSeminar extends HttpServlet {
                 throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu!");
             }
 
-            Timestamp registrationOpen = oldSeminar.getRegistrationOpen();
-            Timestamp registrationDeadline = oldSeminar.getRegistrationDeadline();
+            String registrationOpenString = request.getParameter("registrationOpen");
+            String registrationDeadlineString = request.getParameter("registrationDeadline");
 
-            if (!newStartDate.isEqual(oldSeminar.getStart_date())) {
-                //registrationDeadline = Timestamp.valueOf(newStartDate.minusDays(1));
-                registrationDeadline = Timestamp.valueOf(newStartDate);
-                LocalDateTime idealOpenDate = newStartDate.minusDays(7);
+            Timestamp registrationOpen = null;
+            Timestamp registrationDeadline = null;
 
-                if (idealOpenDate.isAfter(now)) {
-                    registrationOpen = Timestamp.valueOf(idealOpenDate);
-                } else {
-                    registrationOpen = Timestamp.valueOf(now);
-                }
+            if (registrationDeadlineString != null && !registrationDeadlineString.trim().isEmpty()) {
+                String cleanDeadStr = registrationDeadlineString.replace("T", " ");
+                if (cleanDeadStr.length() == 16) cleanDeadStr += ":00";
+                registrationDeadline = Timestamp.valueOf(cleanDeadStr);
             }
+            if (registrationDeadline.after(Timestamp.valueOf(newStartDate))) {
+                throw new IllegalArgumentException("Ngày đóng đăng ký phải trước ngày bắt đầu!");
+            }
+
+            if (registrationOpenString != null && !registrationOpenString.trim().isEmpty()) {
+                String cleanOpenStr = registrationOpenString.replace("T", " ");
+                if (cleanOpenStr.length() == 16) cleanOpenStr += ":00";
+                registrationOpen = Timestamp.valueOf(cleanOpenStr);
+            }
+
+            if (registrationOpen.after(registrationDeadline)) {
+                throw new IllegalArgumentException("Thời gian mở đăng ký phải trước hạn chót đăng ký!");
+            }
+
+//            Timestamp registrationOpen = oldSeminar.getRegistrationOpen();
+//            Timestamp registrationDeadline = oldSeminar.getRegistrationDeadline();
+//
+//            if (!newStartDate.isEqual(oldSeminar.getStart_date())) {
+//                //registrationDeadline = Timestamp.valueOf(newStartDate.minusDays(1));
+//                registrationDeadline = Timestamp.valueOf(newStartDate);
+//                LocalDateTime idealOpenDate = newStartDate.minusDays(7);
+//
+//                if (idealOpenDate.isAfter(now)) {
+//                    registrationOpen = Timestamp.valueOf(idealOpenDate);
+//                } else {
+//                    registrationOpen = Timestamp.valueOf(now);
+//                }
+//            }
 
             Part imagePart = request.getPart("image");
             String imagePath = oldSeminar.getImage();

@@ -121,6 +121,18 @@
                                     <input type="datetime-local" class="form-control" id="endDate" name="endDate"
                                            value="" required>
                                 </div>
+
+                                <div class="form-group">
+                                    <label for="registrationOpen"><strong>Thời gian mở đăng kí</strong></label>
+                                    <input type="datetime-local" class="form-control" id="registrationOpen" name="registrationOpen"
+                                           value="">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="registrationDeadline"><strong>Thời gian đóng đăng kí</strong></label>
+                                    <input type="datetime-local" class="form-control" id="registrationDeadline" name="registrationDeadline"
+                                           value="">
+                                </div>
                             </div>
                         </div>
 
