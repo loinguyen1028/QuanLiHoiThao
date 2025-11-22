@@ -105,8 +105,8 @@ public class EditSeminar extends HttpServlet {
             Timestamp registrationDeadline = oldSeminar.getRegistrationDeadline();
 
             if (!newStartDate.isEqual(oldSeminar.getStart_date())) {
-                registrationDeadline = Timestamp.valueOf(newStartDate.minusDays(1));
-
+                //registrationDeadline = Timestamp.valueOf(newStartDate.minusDays(1));
+                registrationDeadline = Timestamp.valueOf(newStartDate);
                 LocalDateTime idealOpenDate = newStartDate.minusDays(7);
 
                 if (idealOpenDate.isAfter(now)) {
