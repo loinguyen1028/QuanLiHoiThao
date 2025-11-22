@@ -383,7 +383,7 @@
 </div>
 
 <script>
-    // Kích hoạt tooltip Bootstrap 5 (nếu bạn đã load JS bootstrap bundle)
+
     document.addEventListener('DOMContentLoaded', function () {
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
         tooltipTriggerList.forEach(function (tooltipTriggerEl) {
