@@ -75,17 +75,37 @@ public class AddSeminar extends HttpServlet {
                 throw new IllegalArgumentException("Ngày bắt đầu phải thời gian trong tương lai!");
             }
 
-            // (Tùy chọn) Kiểm tra thêm: Ngày kết thúc phải sau ngày bắt đầu
             if (endDate.isBefore(startDate)) {
                 throw new IllegalArgumentException("Ngày kết thúc không được trước ngày bắt đầu!");
             }
 
+            String registrationOpenString =  request.getParameter("registrationOpen");
+            String registrationDeadlineString = request.getParameter("registrationDeadline");
+
             Timestamp registrationOpen = null;
             Timestamp registrationDeadline = null;
-            if (startDate != null) {
-                //registrationDeadline = Timestamp.valueOf(startDate.minusDays(1));
+
+            if (registrationDeadlineString != null && !registrationDeadlineString.trim().isEmpty()) {
+                String cleanDeadStr = registrationDeadlineString.replace("T", " ");
+                if (cleanDeadStr.length() == 16) {
+                    cleanDeadStr += ":00";
+                }
+                registrationDeadline = Timestamp.valueOf(cleanDeadStr);
+            } else {
                 registrationDeadline = Timestamp.valueOf(startDate);
-                //co ngay thoi gian thi mo dk trc 7 ngày, it thì mo ngay
+            }
+
+            if (registrationDeadline.after(Timestamp.valueOf(startDate))) {
+                throw new IllegalArgumentException("Ngày đóng đăng ký phải trước ngày bắt đầu!");
+            }
+
+            if (registrationOpenString != null && !registrationOpenString.trim().isEmpty()) {
+                String cleanOpenStr = registrationOpenString.replace("T", " ");
+                if (cleanOpenStr.length() == 16) {
+                    cleanOpenStr += ":00";
+                }
+                registrationOpen = Timestamp.valueOf(cleanOpenStr);
+            } else {
                 LocalDateTime idealOpenDate = startDate.minusDays(7);
                 if (idealOpenDate.isAfter(now)) {
                     registrationOpen = Timestamp.valueOf(idealOpenDate);
@@ -93,6 +113,24 @@ public class AddSeminar extends HttpServlet {
                     registrationOpen = Timestamp.valueOf(now);
                 }
             }
+
+            if (registrationOpen.after(registrationDeadline)) {
+                throw new IllegalArgumentException("Ngày mở đăng ký phải trước hạn chót đăng ký!");
+            }
+
+//            Timestamp registrationOpen = null;
+//            Timestamp registrationDeadline = null;
+//            if (startDate != null && registrationOpen == null && registrationDeadline == null) {
+//                //registrationDeadline = Timestamp.valueOf(startDate.minusDays(1));
+//                registrationDeadline = Timestamp.valueOf(startDate);
+//                //co ngay thoi gian thi mo dk trc 7 ngày, it thì mo ngay
+//                LocalDateTime idealOpenDate = startDate.minusDays(7);
+//                if (idealOpenDate.isAfter(now)) {
+//                    registrationOpen = Timestamp.valueOf(idealOpenDate);
+//                } else {
+//                    registrationOpen = Timestamp.valueOf(now);
+//                }
+//            }
 
             // Xử lý ảnh
             Part imagePart = request.getPart("image");

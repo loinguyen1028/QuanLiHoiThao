@@ -24,5 +24,5 @@ public interface RegisterService {
     Register create(Register register);
     boolean update(Register register);
     boolean delete(int id);
-
+    List<Register> findBySeminarId(int seminarId);
 }

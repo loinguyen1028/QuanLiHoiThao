@@ -83,4 +83,9 @@ public class RegisterServiceImpl implements RegisterService {
     public boolean delete(int id) {
         return registerRepository.delete(id);
     }
+
+    @Override
+    public List<Register> findBySeminarId(int seminarId) {
+        return registerRepository.findBySeminarId(seminarId);
+    }
 }

@@ -126,18 +126,29 @@
                                 </div>
 
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div>
                                         <div class="form-group">
                                             <label for="startDate"><strong>Ngày bắt đầu <span class="text-danger">*</span></strong></label>
                                             <input type="datetime-local" class="form-control" id="startDate" name="startDate"
                                                    value="<%= seminar.getStart_date()%>" required>
                                         </div>
-                                    </div>
-                                    <div class="col-md-6">
+
                                         <div class="form-group">
                                             <label for="endDate"><strong>Ngày kết thúc <span class="text-danger">*</span></strong></label>
                                             <input type="datetime-local" class="form-control" id="endDate" name="endDate"
                                                    value="<%= seminar.getEnd_date()%>" required>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="form-group">
+                                            <label for="registrationOpen"><strong>Thời gian mở đăng kí <span class="text-danger">*</span></strong></label>
+                                            <input type="datetime-local" class="form-control" id="registrationOpen" name="registrationOpen"
+                                                   value="<%= seminar.getRegistrationOpen()%>" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="registrationDeadline"><strong>Thời gian đóng đăng kí <span class="text-danger">*</span></strong></label>
+                                            <input type="datetime-local" class="form-control" id="registrationDeadline" name="registrationDeadline"
+                                                   value="<%= seminar.getRegistrationDeadline()%>" required>
                                         </div>
                                     </div>
                                 </div>
