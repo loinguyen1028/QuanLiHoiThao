@@ -68,11 +68,11 @@ public class AddSeminar extends HttpServlet {
             String startDateString = request.getParameter("startDate");
             LocalDateTime startDate = LocalDateTime.parse(startDateString);
 
-            LocalDateTime minValidDate = LocalDateTime.now().plusDays(8);
+            LocalDateTime now = LocalDateTime.now();
 
-            if (startDate.isBefore(minValidDate)) {
+            if (startDate.isBefore(now)) {
                 // Nếu ngày chọn NHỎ HƠN (sớm hơn) ngày hợp lệ
-                throw new IllegalArgumentException("Ngày bắt đầu phải cách ngày hiện tại ít nhất 8 ngày!");
+                throw new IllegalArgumentException("Ngày bắt đầu phải thời gian trong tương lai!");
             }
 
             // (Tùy chọn) Kiểm tra thêm: Ngày kết thúc phải sau ngày bắt đầu
@@ -82,12 +82,16 @@ public class AddSeminar extends HttpServlet {
 
             Timestamp registrationOpen = null;
             Timestamp registrationDeadline = null;
-
             if (startDate != null) {
-                // Mở đăng ký trước 7 ngày
-                registrationOpen = Timestamp.valueOf(startDate.minusDays(7));
-                // Hạn chót trước 1 ngày
                 registrationDeadline = Timestamp.valueOf(startDate.minusDays(1));
+
+                //co ngay thoi gian thi mo dk trc 7 ngày, it thì mo ngay
+                LocalDateTime idealOpenDate = startDate.minusDays(7);
+                if (idealOpenDate.isAfter(now)) {
+                    registrationOpen = Timestamp.valueOf(idealOpenDate);
+                } else {
+                    registrationOpen = Timestamp.valueOf(now);
+                }
             }
 
             // Xử lý ảnh
@@ -95,7 +99,7 @@ public class AddSeminar extends HttpServlet {
             String imagePath = "";
 
             if (imagePart != null && imagePart.getSize() > 0 && imagePart.getSubmittedFileName() != null && !imagePart.getSubmittedFileName().isEmpty()) {
-                String appPath = "C:/"; // Đường dẫn lưu ảnh
+                String appPath = "D:/"; // Đường dẫn lưu ảnh
                 imagePath = FileUploadUtil.uploadImageReturnPath(imagePart, "banner", appPath);
             }
 
