@@ -83,8 +83,8 @@ public class AddSeminar extends HttpServlet {
             Timestamp registrationOpen = null;
             Timestamp registrationDeadline = null;
             if (startDate != null) {
-                //registrationDeadline = Timestamp.valueOf(startDate.minusDays(1));
-                registrationDeadline = Timestamp.valueOf(endDate);
+                registrationDeadline = Timestamp.valueOf(startDate.minusDays(1));
+
                 //co ngay thoi gian thi mo dk trc 7 ngày, it thì mo ngay
                 LocalDateTime idealOpenDate = startDate.minusDays(7);
                 if (idealOpenDate.isAfter(now)) {
