@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.util.List;
 
 @WebServlet("/list-user")
-public class ListSeminarServlet extends HttpServlet {
+public class ListUserServlet extends HttpServlet {
 
     private RegisterService registerService;
     private SeminarService seminarService;

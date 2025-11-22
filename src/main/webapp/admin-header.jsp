@@ -12,7 +12,6 @@
     List<Category> sidebarCategories = categoryService.findAll();
 %>
 
-
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -23,36 +22,132 @@
 
     <title>LHQ SEMINAR - Admin</title>
 
-    <!-- Font Awesome & Google Fonts -->
+    <!-- Font Awesome -->
     <link href="<%=request.getContextPath()%>/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <style>
-        body, html, p, span, a, td, th, h1, h2, h3, h4, h5, h6, button, input, label {
-            font-family: 'Inter', 'Roboto', sans-serif !important;
-        }
 
-    </style>
-
-
+    <!-- Google Fonts: Nunito (đồng bộ với list-user.jsp) -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
     <!-- SB Admin & Bootstrap -->
     <link href="<%=request.getContextPath()%>/css/sb-admin-2.min.css" rel="stylesheet">
     <link href="<%=request.getContextPath()%>/css/bootstrap.min.css" rel="stylesheet">
 
-
     <style>
+        /* Font chung cho toàn bộ Admin */
+        body, html, p, span, a, td, th, h1, h2, h3, h4, h5, h6, button, input, label {
+            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+        }
+
+        /* Sidebar tổng thể */
+        .sidebar {
+            background: linear-gradient(180deg, #4e73df 10%, #224abe 100%);
+        }
+
+        .sidebar .sidebar-brand {
+            height: 4.375rem;
+        }
+
+        .sidebar .sidebar-brand-icon {
+            font-size: 1.6rem;
+        }
+
         .sidebar .sidebar-brand-text {
             font-size: 1rem;
-            font-weight: 700;
-            letter-spacing: .05rem;
+            font-weight: 800;
+            letter-spacing: .08rem;
+            text-transform: uppercase;
         }
+
+        /* Nav item & link */
+        .sidebar .nav-item .nav-link {
+            padding: 0.65rem 1rem;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            border-radius: 0.35rem;
+            margin: 0 0.5rem 0.25rem;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .sidebar .nav-item .nav-link i {
+            font-size: 0.95rem;
+            margin-right: 0.6rem;
+        }
+
+        .sidebar .nav-item .nav-link span {
+            font-weight: 600;
+        }
+
+        .sidebar .nav-item .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            transform: translateX(2px);
+        }
+
+        .sidebar .nav-item.active .nav-link {
+            background-color: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.15);
+        }
+
+        /* Heading trong sidebar */
+        .sidebar-heading {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 0.75rem 1rem 0.25rem 1rem;
+            font-weight: 700;
+        }
+
+        /* Collapse menu (Quản lý đăng ký) */
+        .collapse-inner {
+            border-radius: 0.35rem;
+        }
+
+        .collapse-inner .collapse-header {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #b7b9cc;
+            text-transform: uppercase;
+        }
+
+        .collapse-inner .collapse-item {
+            font-size: 0.85rem;
+            padding: 0.35rem 1rem;
+            border-radius: 0.25rem;
+        }
+
+        .collapse-inner .collapse-item:hover {
+            background-color: #f8f9fc;
+        }
+
+        /* Topbar */
+        .topbar {
+            background-color: #ffffff;
+        }
+
         .topbar .navbar-nav .nav-link {
             font-size: 0.9rem;
         }
-        .btn-rounded {
-            border-radius: 8px !important;
+
+        .topbar .dropdown-menu {
+            font-size: 0.9rem;
         }
 
+        .img-profile {
+            height: 2.3rem;
+            width: 2.3rem;
+            object-fit: cover;
+        }
+
+        .topbar-divider {
+            width: 0;
+            border-right: 1px solid #e3e6f0;
+            margin: 0 1rem;
+        }
+
+        /* Button bo tròn dùng chung */
+        .btn-rounded {
+            border-radius: 999px !important;
+        }
     </style>
 </head>
 
@@ -62,7 +157,7 @@
 <div id="wrapper">
 
     <!-- Sidebar -->
-    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+    <ul class="navbar-nav sidebar sidebar-dark accordion" id="accordionSidebar">
 
         <!-- Brand -->
         <a class="sidebar-brand d-flex align-items-center justify-content-center"
@@ -70,7 +165,9 @@
             <div class="sidebar-brand-icon rotate-n-15">
                 <i class="fas fa-laugh-wink"></i>
             </div>
-            <div class="sidebar-brand-text mx-3">LHQ SEMINAR</div>
+            <div class="sidebar-brand-text mx-3">
+                LHQ SEMINAR
+            </div>
         </a>
 
         <hr class="sidebar-divider my-0">
@@ -112,15 +209,13 @@
                     <% if (sidebarCategories != null && !sidebarCategories.isEmpty()) { %>
                     <% for (Category c : sidebarCategories) { %>
                     <a class="collapse-item"
-                       href="<%=request.getContextPath()%>/list-user?categoryId=<%= c.getId() %>">Hội Thảo
-                        <%= c.getName() %>
+                       href="<%=request.getContextPath()%>/list-user?categoryId=<%= c.getId() %>">
+                        Hội thảo <%= c.getName() %>
                     </a>
                     <% } %>
                     <% } else { %>
                     <span class="collapse-item text-muted">Chưa có danh mục nào.</span>
                     <% } %>
-
-
                 </div>
             </div>
         </li>
@@ -153,46 +248,8 @@
                     <i class="fa fa-bars"></i>
                 </button>
 
-
-
                 <!-- Topbar Navbar -->
                 <ul class="navbar-nav ml-auto">
-
-                    <!-- Nav Item - Thông báo (demo, tối giản) -->
-                    <li class="nav-item dropdown no-arrow mx-1">
-                        <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button"
-                           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-bell fa-fw"></i>
-                            <span class="badge badge-danger badge-counter">0</span>
-                        </a>
-                        <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
-                             aria-labelledby="alertsDropdown">
-                            <h6 class="dropdown-header">
-                                Thông báo
-                            </h6>
-                            <span class="dropdown-item small text-gray-500">
-                                Hiện chưa có thông báo mới.
-                            </span>
-                        </div>
-                    </li>
-
-                    <!-- Nav Item - Tin nhắn (demo, tối giản) -->
-                    <li class="nav-item dropdown no-arrow mx-1">
-                        <a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button"
-                           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-envelope fa-fw"></i>
-                            <span class="badge badge-danger badge-counter">0</span>
-                        </a>
-                        <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
-                             aria-labelledby="messagesDropdown">
-                            <h6 class="dropdown-header">
-                                Hộp thư
-                            </h6>
-                            <span class="dropdown-item small text-gray-500">
-                                Hiện chưa có tin nhắn mới.
-                            </span>
-                        </div>
-                    </li>
 
                     <div class="topbar-divider d-none d-sm-block"></div>
 
@@ -208,18 +265,7 @@
                         </a>
                         <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
                              aria-labelledby="userDropdown">
-                            <h6 class="dropdown-header">
-                                Tài khoản quản trị
-                            </h6>
-                            <a class="dropdown-item" href="#">
-                                <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
-                                Thông tin cá nhân
-                            </a>
-                            <a class="dropdown-item" href="#">
-                                <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
-                                Cài đặt
-                            </a>
-                            <div class="dropdown-divider"></div>
+
                             <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
                                 <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
                                 Đăng xuất

@@ -106,7 +106,7 @@
             <div class="team-item position-relative overflow-hidden">
                 <img class="img-fluid w-100" src="img/a5.png" alt="">
                 <div class="team-overlay">
-                    <small>Function</small>
+                    <small>Back-End</small>
                     <h4 class="text-light">Huy Hoang</h4>
                     <div class="d-flex justify-content-center">
                         <a class="btn btn-outline-primary btn-sm-square border-2 me-2" href="#!">

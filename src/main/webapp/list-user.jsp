@@ -129,7 +129,7 @@
         </select>
 
         <button type="submit" class="btn btn-custom btn-search"><i class="fas fa-search"></i></button>
-        <a href="list-user?type=<%= type %>&categoryId=<%= categoryId %>" class="btn btn-light btn-custom" title="Xóa bộ lọc"><i class="fas fa-sync-alt"></i></a>
+        <a href="list-user?type=<%= type %>&categoryId=<%= categoryId %>" class="btn btn-light btn-custom" title="Tải lại"><i class="fas fa-sync-alt"></i></a>
 
         <div class="ml-auto d-flex gap-2">
             <button type="button" onclick="exportExcel()" class="btn btn-custom btn-excel shadow-sm">

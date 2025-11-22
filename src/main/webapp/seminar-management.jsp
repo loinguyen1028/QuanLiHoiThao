@@ -32,11 +32,16 @@
         params.append("&order=").append(orderField);
     }
 
+    String queryParams = params.toString();
     DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
 %>
 
 <style>
-    /* Tổng thể */
+    body {
+        font-family: 'Nunito', sans-serif;
+        background-color: #f8f9fc;
+    }
+
     .page-title-icon {
         width: 42px;
         height: 42px;
@@ -50,33 +55,84 @@
         font-size: 18px;
     }
 
-    .card-header-custom {
-        border-bottom: 0;
-        background: transparent;
-        padding-bottom: 0;
+    .filter-bar {
+        background: white;
+        padding: 15px 20px;
+        border-radius: 15px;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+        margin-bottom: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
     }
 
-    /* Thanh công cụ */
-    .toolbar-label {
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #858796;
-        margin-bottom: 0.25rem;
+    .filter-input {
+        border-radius: 20px;
+        border: 1px solid #d1d3e2;
+        font-size: 0.9rem;
+        padding: 0.375rem 1rem;
+        min-width: 150px;
+    }
+
+    .filter-input:focus {
+        box-shadow: none;
+        border-color: #4e73df;
+    }
+
+    .btn-custom {
+        border-radius: 20px;
         font-weight: 600;
+        font-size: 0.9rem;
+        padding: 6px 18px;
+        transition: 0.2s;
     }
 
-    /* Bảng */
+    .btn-search {
+        background: #4e73df;
+        color: white;
+        border: none;
+    }
+
+    .btn-search:hover {
+        background: #2e59d9;
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .btn-reset {
+        background: #f8f9fc;
+        color: #4e73df;
+        border: 1px solid #d1d3e2;
+    }
+
+    .btn-reset:hover {
+        background: #e2e6ea;
+        color: #4e73df;
+    }
+
+    .table-card {
+        border-radius: 15px;
+        overflow: hidden;
+        border: none;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+    }
+
     .table thead th {
-        font-size: 0.8rem;
+        background-color: #f8f9fc;
+        color: #4e73df;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
+        font-size: 0.8rem;
+        border-bottom: 2px solid #e3e6f0;
+        vertical-align: middle;
         white-space: nowrap;
     }
 
     .table td {
+        vertical-align: middle;
         font-size: 0.9rem;
-        vertical-align: middle !important;
+        padding: 12px;
     }
 
     .seminar-title {
@@ -91,19 +147,13 @@
 
     .badge-category {
         font-size: 0.75rem;
-        padding: .3em .6em;
+        padding: 5px 10px;
         border-radius: 999px;
     }
 
-    .badge-status {
-        font-size: 0.75rem;
-        border-radius: 999px;
-    }
-
-    /* Nút hành động */
     .btn-icon-circle {
-        width: 30px;
-        height: 30px;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
         padding: 0;
         display: inline-flex;
@@ -111,32 +161,22 @@
         justify-content: center;
     }
 
-    /* Phân trang */
     .pagination .page-link {
         font-size: 0.85rem;
-        min-width: 36px;
-        text-align: center;
     }
 
-    .pagination .page-item.active .page-link {
-        box-shadow: 0 0 0 0.15rem rgba(78,115,223,0.25);
-    }
-
-    /* Responsive nhỏ hơn */
     @media (max-width: 767.98px) {
-        .toolbar-right {
-            margin-top: 0.75rem;
-        }
-        .table-responsive {
-            border-radius: .35rem;
+        .filter-bar {
+            flex-direction: column;
+            align-items: flex-start;
         }
     }
 </style>
 
 <div class="container-fluid">
 
-    <!-- Tiêu đề + tóm tắt -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <!-- Tiêu đề -->
+    <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
         <div class="d-flex align-items-center">
             <div class="page-title-icon">
                 <i class="fas fa-chalkboard-teacher"></i>
@@ -144,7 +184,7 @@
             <div>
                 <h1 class="h3 mb-1 text-gray-800">Quản lý hội thảo</h1>
                 <div class="text-muted small">
-                    Theo dõi, tìm kiếm và quản lý các hội thảo trong hệ thống.
+                    Theo dõi, tìm kiếm và sắp xếp các hội thảo trong hệ thống.
                 </div>
                 <div class="mt-1 small">
                     <span class="badge bg-primary text-white me-1">
@@ -152,99 +192,88 @@
                     </span>
                     <% if (keyword != null && !keyword.isEmpty()) { %>
                     <span class="badge bg-light text-primary border">
-                            Từ khóa: "<%= keyword %>"
-                        </span>
+                        Từ khóa: "<%= keyword %>"
+                    </span>
                     <% } %>
                 </div>
             </div>
         </div>
 
-        <a href="<%= request.getContextPath()%>/add_seminar"
-           class="btn btn-success btn-sm shadow-sm mt-3 mt-sm-0">
+        <a href="<%= request.getContextPath() %>/add_seminar"
+           class="btn btn-success btn-custom shadow-sm mt-3 mt-sm-0">
             <i class="fas fa-plus fa-sm text-white-50 me-1"></i> Thêm hội thảo
         </a>
     </div>
 
-    <!-- Card chứa bộ lọc + bảng -->
-    <div class="card shadow mb-4">
-        <div class="card-header card-header-custom px-3 px-md-4 pt-3">
-            <div class="row g-3 align-items-end">
-                <div class="col-md-4">
-                    <div class="toolbar-label">Danh sách hội thảo</div>
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        Tất cả hội thảo
-                        <% if (currentPage > 0 && totalPage > 0) { %>
-                        <span class="text-muted small">
-                                &mdash; Trang <%= currentPage %>/<%= totalPage %>
-                            </span>
-                        <% } %>
-                    </h6>
-                </div>
+    <!-- FILTER BAR: Tìm kiếm + Sắp xếp (giữ nguyên chức năng) -->
+    <div class="filter-bar">
 
-                <!-- Form tìm kiếm -->
-                <div class="col-md-4 toolbar-right">
-                    <div class="toolbar-label">Tìm kiếm</div>
-                    <form action="seminar_management" method="GET">
-                        <div class="input-group input-group-sm">
-                            <input type="text"
-                                   name="keyword"
-                                   class="form-control"
-                                   placeholder="Nhập tên hội thảo, diễn giả, địa điểm..."
-                                   value="<%= keyword %>">
-                            <!-- giữ sort khi search -->
-                            <input type="hidden" name="sortField" value="<%= sortField %>">
-                            <input type="hidden" name="order" value="<%= orderField %>">
-                            <button class="btn btn-primary" type="submit">
-                                <i class="fas fa-search fa-sm"></i>
-                            </button>
-                        </div>
-                    </form>
-                </div>
+        <!-- Form tìm kiếm (giữ sort hiện tại qua hidden) -->
+        <form action="seminar_management" method="GET" class="d-flex flex-wrap gap-2 align-items-center">
+            <div class="input-group" style="min-width: 260px;">
+                <input type="text"
+                       name="keyword"
+                       class="form-control filter-input"
+                       placeholder="Tìm tên hội thảo, diễn giả, địa điểm..."
+                       value="<%= keyword %>">
+            </div>
+            <input type="hidden" name="sortField" value="<%= sortField %>">
+            <input type="hidden" name="order" value="<%= orderField %>">
 
-                <!-- Sắp xếp -->
-                <div class="col-md-4 toolbar-right">
-                    <div class="toolbar-label">Sắp xếp</div>
-                    <form action="seminar_management" method="GET" class="d-flex gap-2">
-                        <input type="hidden" name="keyword" value="<%= keyword %>">
-                        <div class="input-group input-group-sm me-2">
-                            <label class="input-group-text" for="sortFieldSelect">
-                                <i class="fas fa-sort-amount-down-alt"></i>
-                            </label>
-                            <select class="form-select" id="sortFieldSelect" name="sortField">
-                                <option value="id" <%= "id".equals(sortField) ? "selected" : "" %>>Mặc định</option>
-                                <option value="name" <%= "name".equals(sortField) ? "selected" : "" %>>Tên hội thảo</option>
-                                <option value="start_date" <%= "start_date".equals(sortField) ? "selected" : "" %>>Ngày bắt đầu</option>
-                                <option value="end_date" <%= "end_date".equals(sortField) ? "selected" : "" %>>Ngày kết thúc</option>
-                            </select>
-                        </div>
-                        <div class="btn-group btn-group-sm" role="group" aria-label="Order">
-                            <button type="submit"
-                                    name="order"
-                                    value="asc"
-                                    class="btn btn-outline-secondary <%= "asc".equals(orderField) ? "active" : "" %>">
-                                <i class="fas fa-arrow-up"></i>
-                            </button>
-                            <button type="submit"
-                                    name="order"
-                                    value="desc"
-                                    class="btn btn-outline-secondary <%= "desc".equals(orderField) ? "active" : "" %>">
-                                <i class="fas fa-arrow-down"></i>
-                            </button>
-                        </div>
-                    </form>
-                </div>
+            <button type="submit" class="btn btn-custom btn-search">
+                <i class="fas fa-search"></i>
+            </button>
+
+            <a href="seminar_management" class="btn btn-custom btn-reset" title="Tải lại">
+                <i class="fas fa-sync-alt"></i>
+            </a>
+        </form>
+
+        <!-- Form sắp xếp (giữ keyword qua hidden) -->
+        <form action="seminar_management" method="GET"
+              class="d-flex flex-wrap gap-2 align-items-center ms-auto">
+
+            <input type="hidden" name="keyword" value="<%= keyword %>">
+
+            <div class="input-group input-group-sm" style="min-width: 220px;">
+                <span class="input-group-text filter-input" style="border-radius: 20px 0 0 20px;">
+                    <i class="fas fa-sort-amount-down-alt me-1"></i> Sắp xếp
+                </span>
+                <select class="form-select filter-input" name="sortField"
+                        style="border-radius: 0 20px 20px 0; border-left: none;">
+                    <option value="id" <%= "id".equals(sortField) ? "selected" : "" %>>Mặc định</option>
+                    <option value="name" <%= "name".equals(sortField) ? "selected" : "" %>>Tên hội thảo</option>
+                    <option value="start_date" <%= "start_date".equals(sortField) ? "selected" : "" %>>Ngày bắt đầu</option>
+                    <option value="end_date" <%= "end_date".equals(sortField) ? "selected" : "" %>>Ngày kết thúc</option>
+                </select>
             </div>
 
-            <hr class="mt-3 mb-0">
-        </div>
+            <div class="btn-group" role="group" aria-label="Order">
+                <button type="submit"
+                        name="order"
+                        value="asc"
+                        class="btn btn-outline-secondary btn-custom <%= "asc".equals(orderField) ? "active" : "" %>">
+                    <i class="fas fa-arrow-up"></i>
+                </button>
+                <button type="submit"
+                        name="order"
+                        value="desc"
+                        class="btn btn-outline-secondary btn-custom <%= "desc".equals(orderField) ? "active" : "" %>">
+                    <i class="fas fa-arrow-down"></i>
+                </button>
+            </div>
+        </form>
+    </div>
 
-        <div class="card-body px-2 px-md-3">
+    <!-- BẢNG HỘI THẢO (table-card giống list-user) -->
+    <div class="card table-card mb-4">
+        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-bordered table-hover mb-0">
-                    <thead class="table-light">
-                    <tr class="text-center align-middle">
+                <table class="table table-hover mb-0" width="100%">
+                    <thead>
+                    <tr class="text-center">
                         <th style="width: 60px;">ID</th>
-                        <th style="min-width: 220px;">Hội thảo</th>
+                        <th style="min-width: 230px;">Hội thảo</th>
                         <th style="width: 170px;">Ngày bắt đầu</th>
                         <th style="width: 170px;">Ngày kết thúc</th>
                         <th style="min-width: 160px;">Địa điểm</th>
@@ -260,7 +289,7 @@
                             for (SeminarDTO s : seminarList) {
                     %>
                     <tr>
-                        <td class="text-center fw-bold"><%= s.getId() %></td>
+                        <td class="text-center text-muted fw-bold">#<%= s.getId() %></td>
                         <td>
                             <div class="seminar-title mb-1"><%= s.getName() %></div>
                             <div class="seminar-sub">
@@ -330,8 +359,8 @@
                     } else {
                     %>
                     <tr>
-                        <td colspan="9" class="text-center text-muted py-4">
-                            <i class="far fa-folder-open fa-2x mb-2 d-block"></i>
+                        <td colspan="9" class="text-center py-5 text-muted">
+                            <i class="far fa-folder-open fa-3x mb-3 d-block"></i>
                             Không tìm thấy hội thảo nào phù hợp với tiêu chí hiện tại.
                         </td>
                     </tr>
@@ -340,50 +369,45 @@
                 </table>
             </div>
 
-            <!-- Phân trang -->
+            <!-- PHÂN TRANG: style giống list-user.jsp nhưng vẫn dùng logic cũ -->
             <% if (totalPage > 1) { %>
-            <nav aria-label="Page navigation" class="mt-3">
-                <ul class="pagination justify-content-center mb-0">
+            <div class="d-flex justify-content-center py-3">
+                <nav>
+                    <ul class="pagination m-0">
+                        <li class="page-item <%= (currentPage <= 1) ? "disabled" : "" %>">
+                            <a class="page-link rounded-pill px-3 mr-1"
+                               href="seminar_management?page=<%= currentPage - 1 %><%= queryParams %>">
+                                Trước
+                            </a>
+                        </li>
 
-                    <!-- Previous -->
-                    <li class="page-item <%= (currentPage <= 1 ? "disabled" : "") %>">
-                        <a class="page-link"
-                           href="seminar_management?page=<%= (currentPage - 1) %><%= params.toString() %>"
-                           aria-label="Previous">
-                            <span aria-hidden="true">&laquo;</span>
-                        </a>
-                    </li>
+                        <%
+                            for (int i = 1; i <= totalPage; i++) {
+                        %>
+                        <li class="page-item <%= (i == currentPage) ? "active" : "" %>">
+                            <a class="page-link rounded-circle mx-1"
+                               style="width: 35px; height: 35px; display:flex; align-items:center; justify-content:center;"
+                               href="seminar_management?page=<%= i %><%= queryParams %>"><%= i %></a>
+                        </li>
+                        <%
+                            }
+                        %>
 
-                    <!-- Page numbers -->
-                    <%
-                        for (int i = 1; i <= totalPage; i++) {
-                    %>
-                    <li class="page-item <%= (i == currentPage) ? "active" : "" %>">
-                        <a class="page-link"
-                           href="seminar_management?page=<%= i %><%= params.toString() %>"><%= i %></a>
-                    </li>
-                    <%
-                        }
-                    %>
-
-                    <!-- Next -->
-                    <li class="page-item <%= (currentPage >= totalPage ? "disabled" : "") %>">
-                        <a class="page-link"
-                           href="seminar_management?page=<%= (currentPage + 1) %><%= params.toString() %>"
-                           aria-label="Next">
-                            <span aria-hidden="true">&raquo;</span>
-                        </a>
-                    </li>
-
-                </ul>
-            </nav>
+                        <li class="page-item <%= (currentPage >= totalPage) ? "disabled" : "" %>">
+                            <a class="page-link rounded-pill px-3 ml-1"
+                               href="seminar_management?page=<%= currentPage + 1 %><%= queryParams %>">
+                                Sau
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
             <% } %>
         </div>
     </div>
 </div>
 
 <script>
-
     document.addEventListener('DOMContentLoaded', function () {
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
         tooltipTriggerList.forEach(function (tooltipTriggerEl) {

@@ -99,7 +99,7 @@ public class AddSeminar extends HttpServlet {
             String imagePath = "";
 
             if (imagePart != null && imagePart.getSize() > 0 && imagePart.getSubmittedFileName() != null && !imagePart.getSubmittedFileName().isEmpty()) {
-                String appPath = "D:/"; // Đường dẫn lưu ảnh
+                String appPath = "C:/"; // Đường dẫn lưu ảnh
                 imagePath = FileUploadUtil.uploadImageReturnPath(imagePart, "banner", appPath);
             }
 

@@ -105,10 +105,10 @@
                     </div>
 
                     <!-- Link Về chúng tôi -->
-                    <a href="<%= ctx %>/about.jsp" class="nav-item nav-link">Về chúng tôi</a>
+                    <a href="<%= ctx %>/about.jsp" class="nav-item nav-link">Về Chúng Tôi</a>
                 </div>
 
-                <!-- Ô TÌM KIẾM HỘI THẢO (ĐỒNG BỘ STYLE VỚI DANH MỤC HỘI THẢO) -->
+                <!-- Ô TÌM KIẾM HỘI THẢO -->
                 <div class="nav-item nav-search-wrapper d-flex align-items-center me-2">
                     <form class="d-flex w-100"
                           action="<%= ctx %>/home.jsp"
@@ -123,7 +123,7 @@
                         </button>
                     </form>
 
-                    <%-- DROPDOWN KẾT QUẢ TÌM KIẾM (GIỐNG DANH MỤC HỘI THẢO) --%>
+                    <%-- DROPDOWN KẾT QUẢ TÌM KIẾM  --%>
                     <% if (searchResult != null && !searchResult.isEmpty()) { %>
                     <div class="dropdown-menu bg-light mt-2 show"
                          style="min-width: 260px; max-height: 260px; overflow-y: auto;">
