@@ -20,35 +20,97 @@
 
     <style>
         body {
-            background-color: #f0f2f5;
+            font-family: 'Nunito', sans-serif;
+            background-color: #f8f9fc; /* đồng bộ với admin/list-user */
         }
+
         .checkin-wrapper {
             min-height: 65vh;
         }
+
         .checkin-card {
             max-width: 650px;
-            margin: 30px auto;
+            margin: 40px auto;
             border-radius: 18px;
             overflow: hidden;
+            border: none;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
         }
+
+        .checkin-header {
+            background: linear-gradient(135deg, #4e73df, #1cc88a);
+        }
+
+        .checkin-header h3 {
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        .checkin-subtitle {
+            font-size: 0.9rem;
+        }
+
         .form-control-lg {
             font-size: 1.5rem;
             letter-spacing: 2px;
             text-align: center;
+            border-radius: 999px;
+            border: 1px solid #d1d3e2;
         }
+
+        .form-control-lg:focus {
+            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+            border-color: #4e73df;
+        }
+
+        .btn-primary {
+            background-color: #4e73df;
+            border-color: #4e73df;
+            border-radius: 999px;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background-color: #2e59d9;
+            border-color: #2e59d9;
+        }
+
+        .btn-outline-secondary {
+            border-radius: 999px;
+        }
+
+        .qr-toggle-btn {
+            border-radius: 999px;
+            font-size: 0.85rem;
+            padding: 6px 14px;
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            color: #fff;
+        }
+
+        .qr-toggle-btn:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+            color: #fff;
+        }
+
         .user-info {
-            background-color: #e8f5e9;
-            border-left: 5px solid #28a745;
+            background-color: #e8f5ff;
+            border-left: 5px solid #4e73df;
             padding: 20px;
             margin-top: 20px;
-            border-radius: 4px;
+            border-radius: 10px;
         }
+
         .warning-info {
             background-color: #fff3cd;
             border-left: 5px solid #ffc107;
             padding: 20px;
             margin-top: 20px;
-            border-radius: 4px;
+            border-radius: 10px;
+        }
+
+        .alert {
+            border-radius: 12px;
         }
     </style>
 </head>
@@ -57,15 +119,27 @@
 <%@ include file="navbar.jsp" %>
 
 <div class="container checkin-wrapper">
-    <div class="card checkin-card shadow-lg border-0">
-        <div class="card-header bg-primary text-white text-center py-3">
-            <h3 class="mb-0">
-                <i class="fas fa-qrcode me-2"></i>
-                CỔNG CHECK-IN LỄ TÂN
-            </h3>
-            <small class="text-white-50">
-                Đặt con trỏ vào ô nhập &amp; quét mã QR, hệ thống sẽ tự động nhận diện.
-            </small>
+    <div class="card checkin-card">
+        <div class="card-header checkin-header text-white py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="text-center flex-grow-1">
+                    <h3 class="mb-1 text-uppercase">
+                        <i class="fas fa-qrcode me-2"></i>
+                        CỔNG CHECK-IN LỄ TÂN
+                    </h3>
+                    <small class="text-white-50 checkin-subtitle">
+                        Đặt con trỏ vào ô nhập &amp; quét mã QR, hệ thống sẽ tự động nhận diện.
+                    </small>
+                </div>
+                <!-- Icon chuyển sang chế độ quét QR (chưa có chức năng) -->
+                <div class="ms-3 d-none d-md-block">
+                    <button type="button"
+                            class="qr-toggle-btn"
+                            title="Chuyển sang chế độ quét QR bằng camera (sắp ra mắt)">
+                        <i class="fas fa-camera me-1"></i> QR
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div class="card-body p-4">
@@ -99,23 +173,30 @@
 
             <%-- 1. Lỗi (Mã không đúng) --%>
             <% if (error != null) { %>
-            <div class="alert alert-danger mt-3 text-center">
-                <h5 class="mb-0"><%= error %></h5>
+            <div class="alert alert-danger mt-3 text-center shadow-sm">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <%= error %>
+                </h5>
             </div>
             <% } %>
 
             <%-- 2. Cảnh báo (Đã check-in rồi) --%>
             <% if (warning != null) { %>
-            <div class="alert alert-warning mt-3 text-center">
-                <h5 class="mb-0"><%= warning %></h5>
+            <div class="alert alert-warning mt-3 text-center shadow-sm">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <%= warning %>
+                </h5>
             </div>
             <% } %>
 
             <%-- 3. Thành công --%>
             <% if (success != null) { %>
-            <div class="alert alert-success mt-3 text-center">
+            <div class="alert alert-success mt-3 text-center shadow-sm">
                 <h3 class="mb-0"><%= success %></h3>
             </div>
+
             <% } %>
 
             <%-- HIỂN THỊ THÔNG TIN KHÁCH HÀNG (Nếu tìm thấy) --%>
@@ -124,7 +205,10 @@
                 if (r != null) {
             %>
             <div class="<%= (warning != null ? "warning-info" : "user-info") %>">
-                <h4 class="text-primary mb-3"><i class="fas fa-user me-2"></i><%= r.getName() %></h4>
+                <h4 class="text-primary mb-3">
+                    <i class="fas fa-user me-2"></i>
+                    <%= r.getName() %>
+                </h4>
                 <p class="mb-1">
                     <i class="fas fa-envelope me-2"></i>
                     <%= r.getEmail() %>
