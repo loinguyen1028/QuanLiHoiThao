@@ -8,6 +8,7 @@
 <%@ page import="serviceImpl.CategoryServiceImpl" %>
 <%@ page import="utils.DataSourceUtil" %>
 <%@ page import="javax.sql.DataSource" %>
+<%@ page import="java.util.ArrayList" %>
 
 <%
     DataSource ds = DataSourceUtil.getDataSource();
@@ -18,12 +19,43 @@
     List<Category> categories = categoryService.findAll();
 
     String ctx = request.getContextPath();
+    // --- TÌM KIẾM HỘI THẢO THEO TÊN (CHO NAVBAR) ---
+    String searchKeyword = request.getParameter("q");
+    List<Seminar> searchResult = new ArrayList<>();
+
+    if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
+        String kwLower = searchKeyword.toLowerCase();
+        // Cách đơn giản: lấy tất cả rồi filter theo tên
+        List<Seminar> allSeminars = seminarService.findAll();
+        if (allSeminars != null) {
+            for (Seminar s : allSeminars) {
+                if (s.getName() != null &&
+                        s.getName().toLowerCase().contains(kwLower)) {
+                    searchResult.add(s);
+                }
+            }
+        }
+    }
 %>
+<style>
+    .nav-search-wrapper {
+        min-width: 260px;
+        margin-left: 16px; /* cho nó cách menu một chút */
+        position: relative;
+    }
+
+    @media (max-width: 991.98px) {
+        .nav-search-wrapper {
+            width: 100%;
+            margin: .5rem 0;
+        }
+    }
+</style>
 
 <div class="container-fluid sticky-top">
     <div class="container">
         <nav class="navbar navbar-expand-lg navbar-light border-bottom border-2 border-white">
-            <a href="<%= ctx %>/home.jsp" class="navbar-brand">
+            <a href="<%= ctx %>" class="navbar-brand">
                 <img src="<%= ctx %>/img/logo8.png" alt="Logo">
             </a>
 
@@ -35,7 +67,6 @@
 
             <div class="collapse navbar-collapse" id="navbarCollapse">
                 <div class="navbar-nav ms-auto">
-                    <a href="<%= ctx %>/home.jsp" class="nav-item nav-link active">Trang Chủ</a>
 
                     <!-- Dropdown Danh Mục Hội Thảo -->
                     <div class="nav-item dropdown">
@@ -73,9 +104,54 @@
                         </div>
                     </div>
 
-                    <!-- Link Admin -->
+                    <!-- Link Về chúng tôi -->
                     <a href="<%= ctx %>/about.jsp" class="nav-item nav-link">Về chúng tôi</a>
                 </div>
+
+                <!-- Ô TÌM KIẾM HỘI THẢO (ĐỒNG BỘ STYLE VỚI DANH MỤC HỘI THẢO) -->
+                <div class="nav-item nav-search-wrapper d-flex align-items-center me-2">
+                    <form class="d-flex w-100"
+                          action="<%= ctx %>/home.jsp"
+                          method="get">
+                        <input type="text"
+                               name="q"
+                               class="form-control form-control-sm"
+                               placeholder="Tìm hội thảo..."
+                               value="<%= (searchKeyword != null) ? searchKeyword : "" %>">
+                        <button class="btn btn-outline-primary btn-sm ms-1" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+
+                    <%-- DROPDOWN KẾT QUẢ TÌM KIẾM (GIỐNG DANH MỤC HỘI THẢO) --%>
+                    <% if (searchResult != null && !searchResult.isEmpty()) { %>
+                    <div class="dropdown-menu bg-light mt-2 show"
+                         style="min-width: 260px; max-height: 260px; overflow-y: auto;">
+                        <h6 class="dropdown-header">
+                            Kết quả cho "<%= searchKeyword %>"
+                        </h6>
+                        <% for (Seminar s : searchResult) { %>
+                        <a class="dropdown-item"
+                           href="<%= ctx %>/seminar_detail_user?id=<%= s.getId() %>">
+                            <i class="fas fa-chalkboard me-1 text-primary"></i>
+                            <%= s.getName() %>
+                        </a>
+                        <% } %>
+                    </div>
+                    <% } else if (searchKeyword != null && !searchKeyword.trim().isEmpty()) { %>
+                    <div class="dropdown-menu bg-light mt-2 show"
+                         style="min-width: 260px;">
+                        <h6 class="dropdown-header">
+                            Kết quả tìm kiếm
+                        </h6>
+                        <span class="dropdown-item text-muted">
+            Không tìm thấy hội thảo phù hợp
+        </span>
+                    </div>
+                    <% } %>
+                </div>
+
+
             </div>
         </nav>
     </div>
